@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: process.env.GITHUB_PAGES ? '/amberesque-avatar-sheet/' : '/',
+  base: process.env.GITHUB_PAGES === 'true' ? '/amberesque-avatar-sheet/' : '/',
   plugins: [react(), tailwindcss()],
 })
