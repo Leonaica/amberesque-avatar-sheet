@@ -1,0 +1,196 @@
+import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow } from '../types/character';
+import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
+import { SKILLS } from '../data/skills';
+import { POWERS } from '../data/powers';
+import { getDiePool } from '../data/diePoolTable';
+
+// Convert die pool to Homebrewery die notation
+function dieNotation(dice: number[]): string {
+  // Homebrewery uses :df_d6_6: format for die faces
+  // For simplicity, we'll use text notation like "2d12" for now
+  // User can adjust if they want the die face graphics
+  const counts: Record<number, number> = {};
+  dice.forEach(d => {
+    counts[d] = (counts[d] || 0) + 1;
+  });
+  
+  const parts: string[] = [];
+  Object.entries(counts)
+    .map(([size, count]) => ({ size: parseInt(size), count }))
+    .sort((a, b) => b.size - a.size)
+    .forEach(({ size, count }) => {
+      if (count === 1) {
+        parts.push(`d${size}`);
+      } else {
+        parts.push(`${count}d${size}`);
+      }
+    });
+  
+  return parts.join(' + ');
+}
+
+// Get attribute abbreviation (3 chars)
+function attrAbbr(name: string): string {
+  const abbrs: Record<string, string> = {
+    'Toughness': 'Tgh',
+    'Endurance': 'End',
+    'Willpower': 'Wil',
+    'Resilience': 'Res',
+    'Agility': 'Agi',
+    'Reflexes': 'Rct',
+    'Intelligence': 'Int',
+    'Creativity': 'Cre',
+    'Perception': 'Per',
+    'Intuition': 'Itn',
+    'Memory': 'Mem',
+    'Wisdom': 'Wis',
+    'Strength': 'Str',
+    'Allure': 'All',
+    'Charisma': 'Cha',
+    'Presence': 'Pre',
+  };
+  return abbrs[name] || name.substring(0, 3);
+}
+
+export function generateHomebreweryMarkdown(
+  name: string,
+  campaignLimit: number,
+  aspects: Record<string, RatingValue>,
+  functions: Record<string, RatingValue>,
+  skills: CharacterSkill[],
+  powers: CharacterPower[],
+  artifacts: Artifact[],
+  allies: Ally[],
+  personalShadows: PersonalShadow[],
+  stuff: number,
+  surge: number
+): string {
+  const lines: string[] = [];
+  
+  // Cover page placeholder
+  lines.push(`{{margin-top:870px}}`);
+  lines.push(`# ${name || "Avatar's Name"}`);
+  lines.push(`{color:white}`);
+  lines.push(`![character portrait](placeholder-image-url) {position:absolute,top:0px,right:-80px,height:1130px}`);
+  lines.push(`\\page`);
+  lines.push(``);
+  lines.push(`\\page`);
+  lines.push(`# Character Backstory`);
+  lines.push(``);
+  lines.push(`Goes here.`);
+  lines.push(`\\page`);
+  
+  // Character sheet frame
+  lines.push(`{{monster,frame`);
+  lines.push(`## :ei_light: ${name || "Avatar Name"}`);
+  lines.push(`*${campaignLimit} Points*`);
+  lines.push(`___`);
+  
+  // Attributes table header
+  lines.push(`| ||🧱 **Form**|🧬 **Flesh**|🧠 **Mind**|🔥 **Spirit**|`);
+  lines.push(`|:------------------|:------:|:------:|:------:|:------:|:------:|`);
+  
+  // Aspect ratings row
+  const aspectRow = `| |[${aspects.Form >= 0 ? '+' : ''}${aspects.Form}]|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`;
+  lines.push(aspectRow);
+  
+  // Function rows with attributes
+  FUNCTIONS.forEach(func => {
+    const funcRating = functions[func.id];
+    const cells = [`| ${func.emoji} **${func.name}**|${funcRating}`];
+    
+    ASPECTS.forEach(aspect => {
+      const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);
+      if (attr) {
+        const value = funcRating + aspects[aspect.id];
+        const pool = getDiePool(value);
+        const notation = dieNotation(pool.dice);
+        cells.push(`${attrAbbr(attr.name)}<br>${notation}`);
+      }
+    });
+    
+    lines.push(`|${cells.join('|')}|`);
+  });
+  
+  lines.push(`___`);
+  lines.push(``);
+  
+  // Surge
+  const stuffText = stuff >= 0 ? `+${stuff} Good Stuff` : `${stuff} Bad Stuff`;
+  lines.push(`***${surge} Surge Points*** (${stuffText})`);
+  lines.push(`___`);
+  
+  // Powers
+  if (powers.length > 0) {
+    lines.push(`#### Powers`);
+    powers.forEach(cp => {
+      const power = POWERS.find(p => p.id === cp.powerId);
+      if (power) {
+        const label = cp.label ? ` :: ${cp.label}` : '';
+        lines.push(`**${power.name}** *[${cp.points} Points]*${label}`);
+      }
+    });
+  }
+  
+  // Skills
+  if (skills.length > 0) {
+    // Calculate skill costs
+    const skillCostTotal = skills.reduce((sum, skill) => {
+      const rating = SKILL_RATINGS.find(r => r.rating === skill.rating);
+      return sum + (rating?.cost || 0);
+    }, 0);
+    
+    // Calculate cap and max
+    const willpowerPool = getDiePool(functions['Resist'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
+    const memoryPool = getDiePool(functions['Perceive'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
+    const skillCap = Math.min(Math.floor(willpowerPool / 4), 4);
+    const skillMax = Math.floor(memoryPool / 2);
+    
+    lines.push(``);
+    lines.push(`#### Skills [${skillCostTotal} Points], Cap:${skillCap}, Max:${skillMax}`);
+    skills.forEach(skillEntry => {
+      const skill = SKILLS.find(s => s.id === skillEntry.skillId);
+      if (skill) {
+        const rating = SKILL_RATINGS.find(r => r.rating === skillEntry.rating);
+        const modText = rating ? ` (${rating.modifier >= 0 ? '+' : ''}${rating.modifier})` : '';
+        const specialtyText = skillEntry.specialty ? ` ${skillEntry.specialty}` : '';
+        lines.push(`**${skill.name}**::${skillEntry.rating}${modText}${specialtyText}`);
+      }
+    });
+  }
+  
+  // Artifacts
+  if (artifacts.length > 0) {
+    lines.push(``);
+    lines.push(`#### Creatures and Artifacts of Power`);
+    artifacts.forEach(artifact => {
+      const qtyText = artifact.quantity > 1 ? ` x${artifact.quantity}` : '';
+      lines.push(`**${artifact.name}** *[${artifact.cost} Points]*${qtyText} :: ${artifact.description}`);
+    });
+  }
+  
+  // Personal Shadows
+  if (personalShadows.length > 0) {
+    lines.push(``);
+    lines.push(`#### Private Shadows`);
+    personalShadows.forEach(shadow => {
+      lines.push(`**${shadow.name}** *[${shadow.cost} Points]* :: ${shadow.description}`);
+    });
+  }
+  
+  // Allies and Enemies
+  if (allies.length > 0) {
+    lines.push(``);
+    lines.push(`#### Allies and Enemies`);
+    allies.forEach(ally => {
+      const loyaltyText = ally.loyalty < 0 ? 'Enemy' : ally.loyalty > 3 ? 'Devotee' : ally.loyalty > 1 ? 'Ally' : 'Contact';
+      lines.push(`**${ally.name}** *[${ally.cost} Points]* :: ${ally.description || loyaltyText}`);
+    });
+  }
+  
+  // Close the frame
+  lines.push(`}}`);
+  lines.push(`{{pageNumber,auto}}`);
+  
+  return lines.join('\n');
+}

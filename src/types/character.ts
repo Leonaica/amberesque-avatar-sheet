@@ -1,0 +1,267 @@
+// Rating scale for Aspects and Functions
+export type RatingValue = -20 | -15 | -10 | -5 | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 35;
+
+export const RATING_SCALE: RatingValue[] = [-20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35];
+
+export const RATING_LABELS: Record<RatingValue, string> = {
+  [-20]: 'Poor Human',
+  [-15]: 'Typical Human',
+  [-10]: 'Talented Human',
+  [-5]: 'Peak Human',
+  [0]: 'Amberite Norm',
+  [5]: 'Primeval Beast',
+  [10]: 'Supernatural',
+  [15]: 'Mythic',
+  [20]: 'Ranked',
+  [25]: 'Paragon',
+  [30]: 'Incarnation',
+  [35]: 'Manifestation',
+};
+
+// Aspects (What you are)
+export type AspectName = 'Form' | 'Flesh' | 'Mind' | 'Spirit';
+
+export interface Aspect {
+  id: AspectName;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+export const ASPECTS: Aspect[] = [
+  {
+    id: 'Form',
+    name: 'Form',
+    emoji: '🧱',
+    description: 'The mechanical structure and shape of a thing — its solid, physical framework in the world.',
+  },
+  {
+    id: 'Flesh',
+    name: 'Flesh',
+    emoji: '🧬',
+    description: 'The living biological essence of a being, shaping how it endures, adapts, perceives, and influences.',
+  },
+  {
+    id: 'Mind',
+    name: 'Mind',
+    emoji: '🧠',
+    description: 'The incorporeal realm of logic, reason, and knowledge that governs formal magic and technology.',
+  },
+  {
+    id: 'Spirit',
+    name: 'Spirit',
+    emoji: '🔥',
+    description: 'The incorporeal identity of the soul — the self-aware life force.',
+  },
+];
+
+// Functions (What you do)
+export type FunctionName = 'Resist' | 'Adapt' | 'Perceive' | 'Force';
+
+export interface Function {
+  id: FunctionName;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+export const FUNCTIONS: Function[] = [
+  {
+    id: 'Resist',
+    name: 'Resist',
+    emoji: '🛡️',
+    description: 'The ability to withstand hardship, damage, and pressure.',
+  },
+  {
+    id: 'Adapt',
+    name: 'Adapt',
+    emoji: '🎯',
+    description: 'The capacity to move, change, and respond with speed and precision.',
+  },
+  {
+    id: 'Perceive',
+    name: 'Perceive',
+    emoji: '👁️',
+    description: 'The skill of sensing and understanding the world.',
+  },
+  {
+    id: 'Force',
+    name: 'Force',
+    emoji: '💪',
+    description: 'The power to act upon and influence others.',
+  },
+];
+
+// Attributes (derived from Function + Aspect)
+export type AttributeName =
+  | 'Toughness' | 'Endurance' | 'Willpower' | 'Resilience'
+  | 'Agility' | 'Reflexes' | 'Intelligence' | 'Creativity'
+  | 'Perception' | 'Intuition' | 'Memory' | 'Wisdom'
+  | 'Strength' | 'Allure' | 'Charisma' | 'Presence';
+
+export interface Attribute {
+  id: AttributeName;
+  name: string;
+  func: FunctionName;
+  aspect: AspectName;
+  description: string;
+}
+
+export const ATTRIBUTES: Attribute[] = [
+  // Resist
+  { id: 'Toughness', name: 'Toughness', func: 'Resist', aspect: 'Form', description: 'Resistance to physical harm or degradation' },
+  { id: 'Endurance', name: 'Endurance', func: 'Resist', aspect: 'Flesh', description: 'Biological stamina, fatigue resistance, healing' },
+  { id: 'Willpower', name: 'Willpower', func: 'Resist', aspect: 'Mind', description: 'Mental discipline, focus, and resistance to control' },
+  { id: 'Resilience', name: 'Resilience', func: 'Resist', aspect: 'Spirit', description: 'Spiritual strength and emotional resilience' },
+  // Adapt
+  { id: 'Agility', name: 'Agility', func: 'Adapt', aspect: 'Form', description: 'Mechanical movement, speed, and balance' },
+  { id: 'Reflexes', name: 'Reflexes', func: 'Adapt', aspect: 'Flesh', description: 'Instinctive reaction, evasion, bodily coordination' },
+  { id: 'Intelligence', name: 'Intelligence', func: 'Adapt', aspect: 'Mind', description: 'Problem-solving, logic, processing speed' },
+  { id: 'Creativity', name: 'Creativity', func: 'Adapt', aspect: 'Spirit', description: 'Spontaneity, artistic improvisation, spiritual flow' },
+  // Perceive
+  { id: 'Perception', name: 'Perception', func: 'Perceive', aspect: 'Form', description: 'Accuracy of external physical senses' },
+  { id: 'Intuition', name: 'Intuition', func: 'Perceive', aspect: 'Flesh', description: 'Subconscious awareness of danger or emotional states' },
+  { id: 'Memory', name: 'Memory', func: 'Perceive', aspect: 'Mind', description: 'Perception of mental constructs — learned experience and knowledge' },
+  { id: 'Wisdom', name: 'Wisdom', func: 'Perceive', aspect: 'Spirit', description: 'Moral understanding, spiritual insight' },
+  // Force
+  { id: 'Strength', name: 'Strength', func: 'Force', aspect: 'Form', description: 'Capacity to exert physical power on the world' },
+  { id: 'Allure', name: 'Allure', func: 'Force', aspect: 'Flesh', description: 'Physical attractiveness, magnetism, biological influence' },
+  { id: 'Charisma', name: 'Charisma', func: 'Force', aspect: 'Mind', description: 'Mental persuasion, rhetoric, leadership' },
+  { id: 'Presence', name: 'Presence', func: 'Force', aspect: 'Spirit', description: 'Spiritual gravitas, emotional impact on others' },
+];
+
+// Die pool representation
+export interface DiePool {
+  dice: number[];
+  notation: string; // e.g., "2d12 + d6"
+  min: number;
+  max: number;
+}
+
+// Skill ratings
+export type SkillRating = 'Poor' | 'Average' | 'Good' | 'Great' | 'Exceptional' | 'Extraordinary';
+
+export const SKILL_RATINGS: { rating: SkillRating; modifier: number; cost: number }[] = [
+  { rating: 'Poor', modifier: -1, cost: -5 },
+  { rating: 'Average', modifier: 0, cost: 0 },
+  { rating: 'Good', modifier: 1, cost: 0 },
+  { rating: 'Great', modifier: 2, cost: 0 },
+  { rating: 'Exceptional', modifier: 3, cost: 5 },
+  { rating: 'Extraordinary', modifier: 4, cost: 10 },
+];
+
+// Skills
+export type SkillName =
+  | 'SilverTongue' | 'WayOfTheWhisperer' | 'LeadersMantle' | 'UnseenHand'
+  | 'WayOfTheWarrior' | 'WayOfTheRogue' | 'EngineersPen' | 'WayOfTheExplorer'
+  | 'HeartsMotion' | 'ArtisansCraft' | 'MachinesMind' | 'ScholarsMind';
+
+export interface Skill {
+  id: SkillName;
+  name: string;
+  emoji: string;
+  category: 'Social' | 'Physical' | 'Abstract';
+  description: string;
+}
+
+// Power categories
+export type PowerCategory = 'Substance' | 'Semi-Substance' | 'Shadow';
+
+export interface PowerLevel {
+  name: string;
+  cost: number;
+}
+
+export interface Power {
+  id: string;
+  name: string;
+  emoji: string;
+  category: PowerCategory;
+  description: string;
+  requirements: string;
+  keyAttributes: AttributeName[];
+  levels: PowerLevel[];
+}
+
+// Character state
+export interface CharacterAspectRatings {
+  Form: RatingValue;
+  Flesh: RatingValue;
+  Mind: RatingValue;
+  Spirit: RatingValue;
+}
+
+export interface CharacterFunctionRatings {
+  Resist: RatingValue;
+  Adapt: RatingValue;
+  Perceive: RatingValue;
+  Force: RatingValue;
+}
+
+export interface CharacterSkill {
+  skillId: SkillName;
+  rating: SkillRating;
+  specialty: string;
+}
+
+export interface CharacterPower {
+  id: string; // unique ID for this purchase
+  powerId: string;
+  points: number; // custom point cost
+  label: string; // optional custom name for this power purchase
+}
+
+export interface Artifact {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  attributes?: Partial<Record<AttributeName, number>>;
+  powers?: string[];
+  quantity: number;
+}
+
+export interface Ally {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  loyalty: number; // 1-6 positive = ally, -1 to -6 = nemesis
+}
+
+export interface PersonalShadow {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+}
+
+export interface Character {
+  name: string;
+  campaign: string;
+  campaignLimit: number;
+  
+  // Step 1: Attributes
+  aspects: CharacterAspectRatings;
+  functions: CharacterFunctionRatings;
+  
+  // Step 2: Skills
+  skills: CharacterSkill[];
+  
+  // Step 3: Powers
+  powers: CharacterPower[];
+  
+  // Step 4: Artifacts, Allies, Shadows
+  artifacts: Artifact[];
+  allies: Ally[];
+  personalShadows: PersonalShadow[];
+  
+  // Derived values (computed)
+  attributes: Record<AttributeName, number>;
+  diePools: Record<AttributeName, DiePool>;
+  skillCap: number;
+  skillMaximum: number;
+  totalPointsSpent: number;
+  stuff: number; // positive = Good Stuff, negative = Bad Stuff
+  surge: number;
+}

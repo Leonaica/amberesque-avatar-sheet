@@ -1,0 +1,88 @@
+import type { Skill } from '../types/character';
+
+export const SKILLS: Skill[] = [
+  {
+    id: 'SilverTongue',
+    name: "The Silver Tongue",
+    emoji: '🗣️',
+    category: 'Social',
+    description: 'Direct, personal mastery of rhetoric, empathy, and social cues to influence individuals.',
+  },
+  {
+    id: 'WayOfTheWhisperer',
+    name: 'The Way of the Whisperer',
+    emoji: '🕸️',
+    category: 'Social',
+    description: 'Understanding and navigation of complex social networks as systems.',
+  },
+  {
+    id: 'LeadersMantle',
+    name: "The Leader's Mantle",
+    emoji: '👑',
+    category: 'Social',
+    description: 'Personal charisma and organizational acumen to build, lead, and maintain a group.',
+  },
+  {
+    id: 'UnseenHand',
+    name: 'The Unseen Hand',
+    emoji: '🎭',
+    category: 'Social',
+    description: 'Indirect manipulation of events, systems, and people without revealing involvement.',
+  },
+  {
+    id: 'WayOfTheWarrior',
+    name: 'The Way of the Warrior',
+    emoji: '⚔️',
+    category: 'Physical',
+    description: 'Mastery of direct, personal confrontation and physical conditioning.',
+  },
+  {
+    id: 'WayOfTheRogue',
+    name: 'The Way of the Rogue',
+    emoji: '🗡️',
+    category: 'Physical',
+    description: 'Asymmetric action, stealth, and exploitation of unseen weaknesses.',
+  },
+  {
+    id: 'EngineersPen',
+    name: "The Engineer's Pen",
+    emoji: '🖋️',
+    category: 'Physical',
+    description: 'Understanding and application of fundamental principles of logic, physics, and structure.',
+  },
+  {
+    id: 'WayOfTheExplorer',
+    name: 'The Way of the Explorer',
+    emoji: '🧭',
+    category: 'Physical',
+    description: 'Resilience, adaptability, and practical knowledge to survive hostile environments.',
+  },
+  {
+    id: 'HeartsMotion',
+    name: "The Heart's Motion",
+    emoji: '💃🏽',
+    category: 'Abstract',
+    description: 'Creation of profound emotional connection through performance and presence.',
+  },
+  {
+    id: 'ArtisansCraft',
+    name: "The Artisan's Craft",
+    emoji: '🔨',
+    category: 'Abstract',
+    description: 'Tangible creation, repair, and appraisal of physical objects through practiced skill.',
+  },
+  {
+    id: 'MachinesMind',
+    name: "The Machine's Mind",
+    emoji: '🤖',
+    category: 'Abstract',
+    description: 'Understanding, operation, and manipulation of complex non-physical systems.',
+  },
+  {
+    id: 'ScholarsMind',
+    name: "The Scholar's Mind",
+    emoji: '📚',
+    category: 'Abstract',
+    description: 'Acquisition, analysis, and synthesis of knowledge through research and deduction.',
+  },
+];
