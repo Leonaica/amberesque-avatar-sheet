@@ -7,10 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:deploy": "GITHUB_PAGES=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build:deploy && gh-pages -d dist"
+    "deploy": "vite build --base=/amberesque-avatar-sheet/ && gh-pages -d dist"
   },
   "dependencies": {
     "react": "^19.2.0",
