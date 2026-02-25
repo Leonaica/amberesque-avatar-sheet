@@ -90,14 +90,19 @@ export function generateHomebreweryMarkdown(
   lines.push(`| ||🧱 **Form**|🧬 **Flesh**|🧠 **Mind**|🔥 **Spirit**|`);
   lines.push(`|:------------------|:------:|:------:|:------:|:------:|:------:|`);
   
-  // Aspect ratings row
-  const aspectRow = `| |[${aspects.Form >= 0 ? '+' : ''}${aspects.Form}]|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`;
-  lines.push(aspectRow);
+  // Calculate total points for aspects + functions
+  const aspectTotal = aspects.Form + aspects.Flesh + aspects.Mind + aspects.Spirit;
+  const functionTotal = functions.Resist + functions.Adapt + functions.Perceive + functions.Force;
+  const attributeTotal = aspectTotal + functionTotal;
+  
+  // Aspect ratings row - first cell empty, second cell is total, then aspect values
+  lines.push(`| |[${attributeTotal}]|${aspects.Form}|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`);
   
   // Function rows with attributes
   FUNCTIONS.forEach(func => {
     const funcRating = functions[func.id];
-    const cells = [`| ${func.emoji} **${func.name}**|${funcRating}`];
+    // emoji + name | function rating | then 4 attribute cells
+    const cells = [`${func.emoji} **${func.name}**`, `${funcRating}`];
     
     ASPECTS.forEach(aspect => {
       const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);

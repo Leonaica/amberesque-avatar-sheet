@@ -12,7 +12,6 @@ import './components/CharacterSheet.css';
 function App() {
   // Character state
   const [name, setName] = useState('');
-  const [campaign, setCampaign] = useState('');
   const [campaignLimit, setCampaignLimit] = useState(100);
   
   const [aspects, setAspects] = useState({
@@ -37,8 +36,8 @@ function App() {
   
   // Computed values
   const computedCharacter = useMemo(() => {
-    return computeCharacter(name, campaign, campaignLimit, aspects, functions, skills, powers, artifacts, allies, personalShadows);
-  }, [name, campaign, campaignLimit, aspects, functions, skills, powers, artifacts, allies, personalShadows]);
+    return computeCharacter(name, campaignLimit, aspects, functions, skills, powers, artifacts, allies, personalShadows);
+  }, [name, campaignLimit, aspects, functions, skills, powers, artifacts, allies, personalShadows]);
 
   // Aspect/Function handlers
   const handleAspectChange = (aspectId: string, value: RatingValue) => {
@@ -167,6 +166,59 @@ const removePower = (id: string) => {
     });
   };
 
+  // JSON Save/Load handlers
+  const handleSave = () => {
+    const data = {
+      name,
+      campaignLimit,
+      aspects,
+      functions,
+      skills,
+      powers,
+      artifacts,
+      allies,
+      personalShadows,
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name || 'avatar'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoad = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        setName(data.name || '');
+        setCampaignLimit(data.campaignLimit ?? 100);
+        setAspects(data.aspects || { Form: 0, Flesh: 0, Mind: 0, Spirit: 0 });
+        setFunctions(data.functions || { Resist: 0, Adapt: 0, Perceive: 0, Force: 0 });
+        setSkills(data.skills || []);
+        setPowers(data.powers || []);
+        setArtifacts(data.artifacts || []);
+        setAllies(data.allies || []);
+        setPersonalShadows(data.personalShadows || []);
+        
+        alert('Character loaded successfully!');
+      } catch (error) {
+        alert('Failed to load character file. Make sure it\'s a valid JSON save file.');
+      }
+    };
+    input.click();
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -221,16 +273,6 @@ const removePower = (id: string) => {
                 placeholder="Enter name..."
               />
             </div>
-            <div className="flex-1 min-w-48">
-              <label className="block text-sm text-slate-400 mb-1">Campaign</label>
-              <input
-                type="text"
-                value={campaign}
-                onChange={(e) => setCampaign(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="Campaign name..."
-              />
-            </div>
             <div className="w-32">
               <label className="block text-sm text-slate-400 mb-1">Point Limit</label>
               <input
@@ -241,10 +283,22 @@ const removePower = (id: string) => {
               />
             </div>
             <button
+              onClick={handleLoad}
+              className="bg-slate-600 hover:bg-slate-500 text-slate-100 px-4 py-2 rounded font-medium transition-colors"
+            >
+              📂 Load
+            </button>
+            <button
+              onClick={handleSave}
+              className="bg-slate-600 hover:bg-slate-500 text-slate-100 px-4 py-2 rounded font-medium transition-colors"
+            >
+              💾 Save
+            </button>
+            <button
               onClick={handleExportMarkdown}
               className="bg-amber-500 hover:bg-amber-400 text-slate-900 px-4 py-2 rounded font-medium transition-colors"
             >
-              📋 Export Markdown
+              📜 Export for Homebrewery
             </button>
             <button
               onClick={handlePrint}

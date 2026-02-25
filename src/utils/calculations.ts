@@ -69,7 +69,6 @@ export function calculateStuff(campaignLimit: number, pointsSpent: number): numb
 // Build a complete computed character
 export function computeCharacter(
   name: string,
-  campaign: string,
   campaignLimit: number,
   aspects: Character['aspects'],
   functions: Character['functions'],
@@ -131,7 +130,6 @@ export function computeCharacter(
   
   return {
     name,
-    campaign,
     campaignLimit,
     aspects,
     functions,

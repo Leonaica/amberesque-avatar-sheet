@@ -238,7 +238,6 @@ export interface PersonalShadow {
 
 export interface Character {
   name: string;
-  campaign: string;
   campaignLimit: number;
   
   // Step 1: Attributes
