@@ -1,21 +1,22 @@
 // Rating scale for Aspects and Functions
-export type RatingValue = -20 | -15 | -10 | -5 | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 35;
+export type RatingValue = -20 | -15 | -10 | -5 | 0 | 5 | 10 | 15 | 20 | 25 | 30;
 
-export const RATING_SCALE: RatingValue[] = [-20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35];
+export const RATING_SCALE: RatingValue[] = [
+  -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30
+];
 
 export const RATING_LABELS: Record<RatingValue, string> = {
-  [-20]: 'Poor Human',
-  [-15]: 'Typical Human',
-  [-10]: 'Talented Human',
-  [-5]: 'Peak Human',
-  [0]: 'Amberite Norm',
-  [5]: 'Primeval Beast',
-  [10]: 'Supernatural',
-  [15]: 'Mythic',
-  [20]: 'Ranked',
-  [25]: 'Paragon',
-  [30]: 'Incarnation',
-  [35]: 'Manifestation',
+  [-20]: '⛓️‍💥 Poor Human',
+  [-15]: '🚶 Typical Human',
+  [-10]: '🧗 Talented Human',
+  [-5]: '🏆 Peak Human',
+  0: '💪 Amberite Norm',
+  5: '🐅 Primeval Beast',
+  10: '🐉 Supernatural',
+  15: '✨ Mythic',
+  20: '👑 Ranked',
+  25: '🪽 Paragon',
+  30: '🔥 Incarnation',
 };
 
 // Aspects (What you are)
@@ -130,12 +131,12 @@ export const ATTRIBUTES: Attribute[] = [
   { id: 'Presence', name: 'Presence', func: 'Force', aspect: 'Spirit', description: 'Spiritual gravitas, emotional impact on others' },
 ];
 
-// Die pool representation
 export interface DiePool {
   dice: number[];
-  notation: string; // e.g., "2d12 + d6"
+  notation: string; // e.g., "2d12 + d6" or "d4÷2"
   min: number;
   max: number;
+  divisor?: number; // For d4÷2 case
 }
 
 // Skill ratings
