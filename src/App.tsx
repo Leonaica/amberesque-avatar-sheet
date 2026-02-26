@@ -258,7 +258,7 @@ const removePower = (id: string) => {
       {/* Header */}
       <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-center mb-2">
             <h1 className="text-xl font-bold text-amber-400">Amberesque Avatar Sheet</h1>
           </div>
           <div className="flex flex-wrap gap-4 items-end"></div>
@@ -302,7 +302,7 @@ const removePower = (id: string) => {
             </button>
             <button
               onClick={handlePrint}
-              className="bg-slate-600 hover:bg-slate-500 text-slate-100 px-4 py-2 rounded font-medium transition-colors"
+              className="bg-amber-500 hover:bg-slate-500 text-slate-900 px-4 py-2 rounded font-medium transition-colors"
             >
               🖨️ Print PDF
             </button>
@@ -605,15 +605,22 @@ const removePower = (id: string) => {
                 const power = POWERS.find(p => p.id === powerEntry.powerId);
                 if (!power) return null;
                 
-                // Determine tier based on power's specific levels
-                const getTier = (pts: number, levels: { cost: number }[]) => {
+                const getTier = (pts: number, levels: { cost: number }[], powerId: string) => {
+                  // Special handling for Minor Power
+                  if (powerId === 'MinorPower') {
+                    if (pts < 0) return { name: 'Limitation', color: 'text-red-400' };
+                    if (pts === 0) return { name: 'Trivial', color: 'text-slate-400' };
+                    return { name: 'Minor', color: 'text-green-400' };
+                  }
+                  
+                  // Standard tier calculation for other powers
                   if (levels.length === 0) return { name: 'Custom', color: 'text-slate-400' };
                   if (levels.length >= 3 && pts >= levels[2].cost) return { name: 'Exalted', color: 'text-purple-400' };
                   if (levels.length >= 2 && pts >= levels[1].cost) return { name: 'Advanced', color: 'text-blue-400' };
                   if (pts >= levels[0].cost) return { name: 'Standard', color: 'text-green-400' };
                   return { name: 'Below Standard', color: 'text-slate-500' };
                 };
-                const tier = getTier(powerEntry.points, power.levels);
+                const tier = getTier(powerEntry.points, power.levels, power.id);
                 
                 return (
                   <div key={powerEntry.id} className="bg-slate-700/50 rounded p-3">
@@ -634,13 +641,33 @@ const removePower = (id: string) => {
                     <div className="flex gap-2 items-end">
                       <div className="flex-1">
                         <label className="block text-xs text-slate-400 mb-1">Points</label>
-                        <input
-                          type="number"
-                          value={powerEntry.points}
-                          onChange={(e) => updatePowerPoints(powerEntry.id, parseInt(e.target.value) || 0)}
-                          min="0"
-                          className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        />
+                        {power.id === 'MinorPower' ? (
+                          <select
+                            value={powerEntry.points}
+                            onChange={(e) => updatePowerPoints(powerEntry.id, parseInt(e.target.value))}
+                            className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          >
+                            <option value={-5}>Limitation (-5)</option>
+                            <option value={-4}>Limitation (-4)</option>
+                            <option value={-3}>Limitation (-3)</option>
+                            <option value={-2}>Limitation (-2)</option>
+                            <option value={-1}>Limitation (-1)</option>
+                            <option value={0}>Trivial (0)</option>
+                            <option value={1}>Minor (1)</option>
+                            <option value={2}>Minor (2)</option>
+                            <option value={3}>Minor (3)</option>
+                            <option value={4}>Minor (4)</option>
+                            <option value={5}>Minor (5)</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="number"
+                            value={powerEntry.points}
+                            onChange={(e) => updatePowerPoints(powerEntry.id, parseInt(e.target.value) || 0)}
+                            min="0"
+                            className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          />
+                        )}
                       </div>
                       <div className={`text-sm font-medium ${tier.color}`}>
                         {tier.name}
@@ -649,19 +676,39 @@ const removePower = (id: string) => {
                     
                     {/* Quick-set buttons based on power's standard levels */}
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {power.levels.map((level, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => updatePowerPoints(powerEntry.id, level.cost)}
-                          className={`text-xs px-2 py-0.5 rounded ${
-                            powerEntry.points === level.cost
-                              ? 'bg-amber-500 text-slate-900'
-                              : 'bg-slate-600 hover:bg-slate-500 text-slate-300'
-                          }`}
-                        >
-                          {level.name} ({level.cost})
-                        </button>
-                      ))}
+                      {power.id === 'MinorPower' ? (
+                        // Simplified buttons for Minor Power
+                        <>
+                          {[-3, 3, 5].map(cost => (
+                            <button
+                              key={cost}
+                              onClick={() => updatePowerPoints(powerEntry.id, cost)}
+                              className={`text-xs px-2 py-0.5 rounded ${
+                                powerEntry.points === cost
+                                  ? 'bg-amber-500 text-slate-900'
+                                  : 'bg-slate-600 hover:bg-slate-500 text-slate-300'
+                              }`}
+                            >
+                              {cost < 0 ? `Limitation (${cost})` : cost === 0 ? `Trivial (${cost})` : `Minor (+${cost})`}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        // Standard buttons for other powers
+                        power.levels.map((level, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => updatePowerPoints(powerEntry.id, level.cost)}
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              powerEntry.points === level.cost
+                                ? 'bg-amber-500 text-slate-900'
+                                : 'bg-slate-600 hover:bg-slate-500 text-slate-300'
+                            }`}
+                          >
+                            {level.name} ({level.cost})
+                          </button>
+                        ))
+                      )}
                     </div>
                     
                     {/* Custom label for this power purchase */}

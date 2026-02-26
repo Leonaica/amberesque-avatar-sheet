@@ -1,32 +1,27 @@
-import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow } from '../types/character';
+import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow, DiePool } from '../types/character';
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { SKILLS } from '../data/skills';
 import { POWERS } from '../data/powers';
 import { getDiePool } from '../data/diePoolTable';
 
-// Convert die pool to Homebrewery die notation
-function dieNotation(dice: number[]): string {
-  // Homebrewery uses :df_d6_6: format for die faces
-  // For simplicity, we'll use text notation like "2d12" for now
-  // User can adjust if they want the die face graphics
-  const counts: Record<number, number> = {};
-  dice.forEach(d => {
-    counts[d] = (counts[d] || 0) + 1;
-  });
+// Convert die pool to Homebrewery die icons
+function dieIcons(pool: DiePool): string {
+  if (pool.divisor) {
+    // Special case: d4÷2
+    return `:df_d4_4:÷${pool.divisor}`;
+  }
   
-  const parts: string[] = [];
-  Object.entries(counts)
-    .map(([size, count]) => ({ size: parseInt(size), count }))
-    .sort((a, b) => b.size - a.size)
-    .forEach(({ size, count }) => {
-      if (count === 1) {
-        parts.push(`d${size}`);
-      } else {
-        parts.push(`${count}d${size}`);
-      }
-    });
+  // Map die sizes to icon format
+  const iconMap: Record<number, string> = {
+    4: ':df_d4_4:',
+    6: ':df_d6_6:',
+    8: ':df_d8_8:',
+    10: ':df_d10_10:',
+    12: ':df_d12_12:',
+  };
   
-  return parts.join(' + ');
+  // Generate icons for each die (no separator)
+  return pool.dice.map(d => iconMap[d] || `d${d}`).join('');
 }
 
 // Get attribute abbreviation (3 chars)
@@ -67,19 +62,6 @@ export function generateHomebreweryMarkdown(
 ): string {
   const lines: string[] = [];
   
-  // Cover page placeholder
-  lines.push(`{{margin-top:870px}}`);
-  lines.push(`# ${name || "Avatar's Name"}`);
-  lines.push(`{color:white}`);
-  lines.push(`![character portrait](placeholder-image-url) {position:absolute,top:0px,right:-80px,height:1130px}`);
-  lines.push(`\\page`);
-  lines.push(``);
-  lines.push(`\\page`);
-  lines.push(`# Character Backstory`);
-  lines.push(``);
-  lines.push(`Goes here.`);
-  lines.push(`\\page`);
-  
   // Character sheet frame
   lines.push(`{{monster,frame`);
   lines.push(`## :ei_light: ${name || "Avatar Name"}`);
@@ -109,8 +91,8 @@ export function generateHomebreweryMarkdown(
       if (attr) {
         const value = funcRating + aspects[aspect.id];
         const pool = getDiePool(value);
-        const notation = dieNotation(pool.dice);
-        cells.push(`${attrAbbr(attr.name)}<br>${notation}`);
+        const icons = dieIcons(pool);
+        cells.push(`${attrAbbr(attr.name)}<br>${icons}`);
       }
     });
     
@@ -131,7 +113,7 @@ export function generateHomebreweryMarkdown(
     powers.forEach(cp => {
       const power = POWERS.find(p => p.id === cp.powerId);
       if (power) {
-        const label = cp.label ? ` :: ${cp.label}` : '';
+        const label = cp.label ? ` :: ${cp.label}` : ' ::';
         lines.push(`**${power.name}** *[${cp.points} Points]*${label}`);
       }
     });
@@ -195,7 +177,6 @@ export function generateHomebreweryMarkdown(
   
   // Close the frame
   lines.push(`}}`);
-  lines.push(`{{pageNumber,auto}}`);
   
   return lines.join('\n');
 }
