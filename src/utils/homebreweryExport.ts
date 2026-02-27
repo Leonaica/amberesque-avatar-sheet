@@ -49,6 +49,7 @@ function attrAbbr(name: string): string {
 
 export function generateHomebreweryMarkdown(
   name: string,
+  avatarIcon: string,
   campaignLimit: number,
   aspects: Record<string, RatingValue>,
   functions: Record<string, RatingValue>,
@@ -64,7 +65,7 @@ export function generateHomebreweryMarkdown(
   
   // Character sheet frame
   lines.push(`{{monster,frame`);
-  lines.push(`## :ei_light: ${name || "Avatar Name"}`);
+  lines.push(`## ${avatarIcon} ${name || "Avatar Name"}`);
   lines.push(`*${campaignLimit} Points*`);
   lines.push(`___`);
   

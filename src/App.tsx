@@ -8,11 +8,23 @@ import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses } fro
 import { generateHomebreweryMarkdown } from './utils/homebreweryExport';
 import { CharacterSheet } from './components/CharacterSheet';
 import './components/CharacterSheet.css';
+import { IconPicker } from './components/IconPicker';
+import { ICONS, DEFAULT_ICON, type IconEntry } from './data/icons';
 
 function App() {
   // Character state
   const [name, setName] = useState('');
   const [campaignLimit, setCampaignLimit] = useState(100);
+  const [avatarIcon, setAvatarIcon] = useState<string>(DEFAULT_ICON.code);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  
+  const renderIcon = (icon: IconEntry) => {
+    return icon.library === 'fontawesome' ? (
+      <i className={icon.faClass || 'fa-solid fa-user'}></i>
+    ) : (
+      <span className="ei-icon">{icon.eiChar}</span>
+    );
+  };
   
   const [aspects, setAspects] = useState({
     Form: 0 as RatingValue,
@@ -135,10 +147,15 @@ const removePower = (id: string) => {
     }]);
   };
 
+  const handleIconSelect = (icon: IconEntry) => {
+    setAvatarIcon(icon.code);
+  };
+
   // Export handler
   const handleExportMarkdown = () => {
     const markdown = generateHomebreweryMarkdown(
       name,
+      avatarIcon,
       campaignLimit,
       aspects,
       functions,
@@ -170,6 +187,7 @@ const removePower = (id: string) => {
   const handleSave = () => {
     const data = {
       name,
+      avatarIcon,
       campaignLimit,
       aspects,
       functions,
@@ -202,6 +220,7 @@ const removePower = (id: string) => {
         const data = JSON.parse(text);
         
         setName(data.name || '');
+        setAvatarIcon(data.avatarIcon || DEFAULT_ICON.code);
         setCampaignLimit(data.campaignLimit ?? 100);
         setAspects(data.aspects || { Form: 0, Flesh: 0, Mind: 0, Spirit: 0 });
         setFunctions(data.functions || { Resist: 0, Adapt: 0, Perceive: 0, Force: 0 });
@@ -257,21 +276,40 @@ const removePower = (id: string) => {
     <div className="min-h-screen bg-slate-900 text-slate-100">
       {/* Header */}
       <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-center mb-2">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex-1"></div>
             <h1 className="text-xl font-bold text-amber-400">Amberesque Avatar Sheet</h1>
+            <div className="flex-1 flex justify-end">
+              <a
+                href="https://storage.googleapis.com/amberesque/Amberesque.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded transition-colors"
+              >
+                📖 Rules
+              </a>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4 items-end"></div>
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-48">
               <label className="block text-sm text-slate-400 mb-1">Character Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="Enter name..."
-              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowIconPicker(true)}
+                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 text-xl hover:bg-slate-600 transition-colors"
+                  title="Choose icon"
+                >
+                  {renderIcon(ICONS.find(i => i.code === avatarIcon) || DEFAULT_ICON)}
+                </button>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="flex-1 bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Enter name..."
+                />
+              </div>
             </div>
             <div className="w-32">
               <label className="block text-sm text-slate-400 mb-1">Point Limit</label>
@@ -963,6 +1001,13 @@ const removePower = (id: string) => {
         personalShadows={personalShadows}
         stuff={stuff}
         surge={surge}
+      />
+      {/* Icon Picker Modal */}
+      <IconPicker
+        isOpen={showIconPicker}
+        onClose={() => setShowIconPicker(false)}
+        onSelect={handleIconSelect}
+        currentIcon={avatarIcon}
       />
     </div>
   );
