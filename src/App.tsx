@@ -587,12 +587,33 @@ const removePower = (id: string) => {
                         onChange={(e) => updateSkill(skillEntry.skillId, { rating: e.target.value as any })}
                         className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
-                        {SKILL_RATINGS.map(r => (
-                          <option key={r.rating} value={r.rating}>
-                            {r.rating} ({r.modifier >= 0 ? '+' : ''}{r.modifier}/die)
-                            {r.cost !== 0 ? ` [${r.cost >= 0 ? '+' : ''}${r.cost} pts]` : ''}
-                          </option>
-                        ))}
+                        {SKILL_RATINGS
+                          .filter(r => {
+                            // Always show current rating (even if now invalid due to attribute changes)
+                            if (r.rating === skillEntry.rating) return true;
+                            
+                            // Filter by skill cap (max modifier allowed for this character)
+                            if (r.modifier > computedCharacter.skillCap) return false;
+                            
+                            // Filter by skill maximum (sum of all modifiers must not exceed max)
+                            const currentTotal = skills.reduce((sum, s) => {
+                              const rating = SKILL_RATINGS.find(sr => sr.rating === s.rating);
+                              return sum + (rating?.modifier || 0);
+                            }, 0);
+                            
+                            // Remove modifier of current rating, add modifier of new rating
+                            const currentRatingModifier = SKILL_RATINGS.find(sr => sr.rating === skillEntry.rating)?.modifier || 0;
+                            const projectedTotal = currentTotal - currentRatingModifier + r.modifier;
+                            
+                            return projectedTotal <= computedCharacter.skillMaximum;
+                          })
+                          .map(r => (
+                            <option key={r.rating} value={r.rating}>
+                              {r.rating} ({r.modifier >= 0 ? '+' : ''}{r.modifier}/die)
+                              {r.cost !== 0 ? ` [${r.cost >= 0 ? '+' : ''}${r.cost} pts]` : ''}
+                            </option>
+                          ))
+                        }
                       </select>
                     </div>
                     <input
