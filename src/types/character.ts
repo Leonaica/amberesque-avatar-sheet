@@ -206,10 +206,11 @@ export interface CharacterSkill {
 }
 
 export interface CharacterPower {
-  id: string; // unique ID for this purchase
+  id: string;
   powerId: string;
-  points: number; // custom point cost
-  label: string; // optional custom name for this power purchase
+  points: number;
+  label: string; // Display name (defaults to tier name, editable)
+  description: string; // How this power manifests for the avatar
 }
 
 export interface Artifact {

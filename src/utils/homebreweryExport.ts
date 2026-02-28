@@ -108,18 +108,18 @@ export function generateHomebreweryMarkdown(
   lines.push(`***${surge} Surge Points*** (${stuffText})`);
   lines.push(`___`);
   
-  // Powers
   if (powers.length > 0) {
     lines.push(`#### Powers`);
     powers.forEach(cp => {
       const power = POWERS.find(p => p.id === cp.powerId);
       if (power) {
-        const label = cp.label ? ` :: ${cp.label}` : ' ::';
-        lines.push(`**${power.name}** *[${cp.points} Points]*${label}`);
+        const powerName = cp.label || power.name;
+        const description = cp.description ? ` :: ${cp.description}` : '';
+        lines.push(`**${power.emoji} ${powerName}** *[${cp.points} Points]*${description}`);
       }
     });
   }
-  
+
   // Skills
   if (skills.length > 0) {
     // Calculate skill costs

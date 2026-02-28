@@ -75,29 +75,65 @@ function App() {
     setSkills(prev => prev.filter(s => s.skillId !== skillId));
   };
 
-// Power handlers
-const addPower = (powerId: string) => {
-  const power = POWERS.find(p => p.id === powerId);
-  const defaultCost = power?.levels[0]?.cost || 0;
-  setPowers(prev => [...prev, { 
-    id: crypto.randomUUID(), 
-    powerId, 
-    points: defaultCost,
-    label: '' 
-  }]);
-};
+  // Power handlers
+  const addPower = (powerId: string) => {
+    const power = POWERS.find(p => p.id === powerId);
+    if (!power) return;
+  
+    if (powers.some(p => p.powerId === powerId)) return;
+  
+    const defaultPoints = power.levels.length > 0 ? power.levels[0].cost : 0;
+    const defaultLabel = power.levels.length > 0 ? power.levels[0].name : power.name;
+  
+    setPowers([...powers, {
+      id: crypto.randomUUID(),
+      powerId,
+      points: defaultPoints,
+      label: defaultLabel,
+      description: '',
+    }]);
+  };
 
-const updatePowerPoints = (id: string, points: number) => {
-  setPowers(prev => prev.map(p => p.id === id ? { ...p, points } : p));
-};
+  const updatePowerDescription = (id: string, description: string) => {
+    setPowers(powers.map(p => p.id === id ? { ...p, description } : p));
+  };
 
-const updatePowerLabel = (id: string, label: string) => {
-  setPowers(prev => prev.map(p => p.id === id ? { ...p, label } : p));
-};
+  const updatePowerPoints = (id: string, points: number) => {
+    setPowers(powers.map(p => {
+      if (p.id !== id) return p;
+  
+      // Find the power definition
+      const power = POWERS.find(pow => pow.id === p.powerId);
+      if (!power) return { ...p, points };
+  
+      // Only auto-update label if it's empty or still at a default value
+      // For Minor Powers, never auto-update the label when points change
+      if (power.id === 'MinorPower') {
+        return { ...p, points };
+      }
+  
+      // Check if label is empty or still a default (matches a level name)
+      const isDefaultLabel = !p.label || power.levels.some(l => l.name === p.label);
+      
+      if (isDefaultLabel) {
+        // Find the highest affordable level and use its name as label
+        const affordableLevel = [...power.levels].reverse().find(l => points >= l.cost);
+        const newLabel = affordableLevel?.name || power.levels[0]?.name || power.name;
+        return { ...p, points, label: newLabel };
+      }
+  
+      // User has a custom label, keep it
+      return { ...p, points };
+    }));
+  };
 
-const removePower = (id: string) => {
-  setPowers(prev => prev.filter(p => p.id !== id));
-};
+  const updatePowerLabel = (id: string, label: string) => {
+    setPowers(prev => prev.map(p => p.id === id ? { ...p, label } : p));
+  };
+
+  const removePower = (id: string) => {
+    setPowers(prev => prev.filter(p => p.id !== id));
+  };
 
   // Artifact handlers
   const addArtifact = () => {
@@ -630,8 +666,8 @@ const removePower = (id: string) => {
           )}
         </section>
 
-{/* Step 3: Powers */}
-<section className="bg-slate-800 rounded-lg p-4">
+  {/* Step 3: Powers */}
+  <section className="bg-slate-800 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
               <span>✨</span> Powers
@@ -771,13 +807,37 @@ const removePower = (id: string) => {
                     </div>
                     
                     {/* Custom label for this power purchase */}
-                    <input
-                      type="text"
-                      value={powerEntry.label || ''}
-                      onChange={(e) => updatePowerLabel(powerEntry.id, e.target.value)}
-                      placeholder="Custom label (optional)..."
-                      className="w-full mt-2 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
+                    {/* Label for this power purchase */}
+                    <div className="mt-2">
+                      <label className="block text-xs text-slate-400 mb-1">Label</label>
+                      <input
+                        type="text"
+                        value={powerEntry.label || ''}
+                        onChange={(e) => updatePowerLabel(powerEntry.id, e.target.value)}
+                        placeholder={(() => {
+                          if (power.id === 'MinorPower') {
+                            if (powerEntry.points < 0) return 'Limitation';
+                            if (powerEntry.points === 0) return 'Trivial';
+                            return 'Minor';
+                          }
+                          const affordableLevel = [...power.levels].reverse().find(l => powerEntry.points >= l.cost);
+                          return affordableLevel?.name || power.levels[0]?.name || power.name;
+                        })()}
+                        className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    
+                    {/* Description of how this power manifests */}
+                    <div className="mt-2">
+                      <label className="block text-xs text-slate-400 mb-1">Description</label>
+                      <textarea
+                        value={powerEntry.description || ''}
+                        onChange={(e) => updatePowerDescription(powerEntry.id, e.target.value)}
+                        placeholder="How does this power manifest for your avatar?"
+                        rows={2}
+                        className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                      />
+                    </div>
                   </div>
                 );
               })}
