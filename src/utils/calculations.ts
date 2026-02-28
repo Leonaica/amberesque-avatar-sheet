@@ -1,4 +1,4 @@
-import type { Character, AttributeName } from '../types/character';
+import type { Character, AttributeName, FunctionName, DiePool } from '../types/character';
 import { ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { getDiePool, DIE_POOL_TABLE } from '../data/diePoolTable';
 
@@ -55,9 +55,36 @@ export function calculateSkillCosts(skills: Character['skills']): number {
 }
 
 // Calculate surge points
-export function calculateSurge(stuff: number): number {
-  const baseSurge = 5; // Default base
+export function calculateSurge(
+  diePools: Record<AttributeName, DiePool>,
+  stuff: number
+): number {
+  // Calculate total dice count for each Function
+  const functionDice: Record<FunctionName, number> = {
+    Resist: 0,
+    Adapt: 0,
+    Perceive: 0,
+    Force: 0,
+  };
+
+  // Sum dice counts per function
+  ATTRIBUTES.forEach(attr => {
+    const pool = diePools[attr.id];
+    const diceCount = pool.dice.length; // Count of dice, not sum of values
+    functionDice[attr.func] += diceCount;
+  });
+
+  // Find highest function's dice count (base surge)
+  const baseSurge = Math.max(
+    functionDice['Resist'],
+    functionDice['Adapt'],
+    functionDice['Perceive'],
+    functionDice['Force']
+  );
+
+  // Stuff adjustment: every 5 points adds/subtracts 1
   const stuffModifier = Math.floor(stuff / 5);
+
   return Math.max(1, baseSurge + stuffModifier);
 }
 
@@ -126,8 +153,7 @@ export function computeCharacter(
   totalPointsSpent += personalShadows.reduce((sum, s) => sum + s.cost, 0);
   
   const stuff = calculateStuff(campaignLimit, totalPointsSpent);
-  const surge = calculateSurge(stuff);
-  
+  const surge = calculateSurge(diePools, stuff);
   return {
     name,
     campaignLimit,

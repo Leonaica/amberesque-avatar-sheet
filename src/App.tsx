@@ -200,8 +200,8 @@ function App() {
       artifacts,
       allies,
       personalShadows,
-      stuff,
-      surge
+      computedCharacter.stuff,
+      computedCharacter.surge
     );
     
     // Copy to clipboard
@@ -306,7 +306,6 @@ function App() {
   }, [aspects, functions, skills, powerCosts, artifacts, allies, personalShadows]);
 
   const stuff = campaignLimit - totalPointsSpent;
-  const surge = Math.max(1, 5 + Math.floor(stuff / 5));
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -401,7 +400,7 @@ function App() {
             </div>
             <div>
               <span className="text-slate-400">Surge: </span>
-              <span className="font-bold text-cyan-400">{surge}</span>
+              <span className="font-bold text-cyan-400">{computedCharacter.surge}</span>
             </div>
             <div>
               <span className="text-slate-400">Skill Cap: </span>
@@ -1063,7 +1062,7 @@ function App() {
             </div>
             <div>
               <span className="text-slate-400">Surge: </span>
-              <span className="text-2xl font-bold text-cyan-400">{surge}</span>
+              <span className="text-2xl font-bold text-cyan-400">{computedCharacter.surge}</span>
             </div>
           </div>
         </section>
@@ -1081,7 +1080,7 @@ function App() {
         allies={allies}
         personalShadows={personalShadows}
         stuff={stuff}
-        surge={surge}
+        surge={computedCharacter.surge}
       />
       {/* Icon Picker Modal */}
       <IconPicker
