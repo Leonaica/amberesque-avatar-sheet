@@ -14,6 +14,10 @@ export const POWERS: Power[] = [
       { name: 'Pattern Artisan', cost: 75 },
       { name: 'Pattern Virtuoso', cost: 100 },
     ],
+    prerequisites: [
+      { type: 'attribute', attribute: 'Willpower', minimum: 0 },
+      { type: 'attribute', attribute: 'Endurance', minimum: 0 },
+    ],
   },
   {
     id: 'logrus',
@@ -28,6 +32,10 @@ export const POWERS: Power[] = [
       { name: 'Logrus Lord', cost: 70 },
       { name: 'Logrus Scion', cost: 100 },
     ],
+    prerequisites: [
+      { type: 'power', powerId: 'shapeShifting', powerPoints: 35 },
+      { type: 'aspect', aspect: 'Spirit', minimum: 0 },
+    ],
   },
   {
     id: 'tarot',
@@ -41,6 +49,10 @@ export const POWERS: Power[] = [
       { name: 'Tarot Journeyman', cost: 40 },
       { name: 'Tarot Artist', cost: 60 },
       { name: 'Tarot Maestro', cost: 100 },
+    ],
+    prerequisites: [
+      { type: 'attribute', attribute: 'Willpower', minimum: 0 },
+      { type: 'attribute', attribute: 'Endurance', minimum: 0 },
     ],
   },
   {
@@ -82,6 +94,12 @@ export const POWERS: Power[] = [
       { name: 'Archmage', cost: 20 },
       { name: 'Archon', cost: 30 },
       { name: 'Primarch', cost: 40 },
+    ],
+    prerequisites: [
+      { type: 'attribute', attribute: 'Resilience', minimum: -10 },
+      { type: 'attribute', attribute: 'Intelligence', minimum: -10 },
+      { type: 'attribute', attribute: 'Memory', minimum: -10 },
+      { type: 'attribute', attribute: 'Presence', minimum: -10 },
     ],
   },
   {

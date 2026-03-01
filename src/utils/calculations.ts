@@ -1,6 +1,7 @@
-import type { Character, AttributeName, FunctionName, DiePool } from '../types/character';
+import type { Character, AttributeName, FunctionName, DiePool, Power, CharacterPower } from '../types/character';
 import { ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { getDiePool, DIE_POOL_TABLE } from '../data/diePoolTable';
+import { POWERS } from '../data/powers';
 
 // Calculate attribute value from function + aspect ratings
 export function calculateAttribute(
@@ -54,6 +55,52 @@ export function calculateSkillCosts(skills: Character['skills']): number {
   }, 0);
 }
 
+// Check if power prerequisites are met
+export function checkPowerPrerequisites(
+  power: Power,
+  attributes: Record<AttributeName, number>,
+  aspects: { Form: number; Flesh: number; Mind: number; Spirit: number },
+  functions: { Resist: number; Adapt: number; Perceive: number; Force: number },
+  ownedPowers: CharacterPower[]
+): { met: boolean; unmet: string[] } {
+  if (!power.prerequisites || power.prerequisites.length === 0) {
+    return { met: true, unmet: [] };
+  }
+
+  const unmet: string[] = [];
+
+  for (const prereq of power.prerequisites) {
+    if (prereq.type === 'attribute' && prereq.attribute && prereq.minimum !== undefined) {
+      const attrValue = attributes[prereq.attribute];
+      if (attrValue < prereq.minimum) {
+        unmet.push(`${prereq.attribute} ${attrValue} < ${prereq.minimum}`);
+      }
+    } else if (prereq.type === 'aspect' && prereq.aspect && prereq.minimum !== undefined) {
+      const aspectValue = aspects[prereq.aspect];
+      if (aspectValue < prereq.minimum) {
+        unmet.push(`${prereq.aspect} ${aspectValue} < ${prereq.minimum}`);
+      }
+    } else if (prereq.type === 'function' && prereq.func && prereq.minimum !== undefined) {
+      const funcValue = functions[prereq.func];
+      if (funcValue < prereq.minimum) {
+        unmet.push(`${prereq.func} ${funcValue} < ${prereq.minimum}`);
+      }
+    } else if (prereq.type === 'power' && prereq.powerId) {
+      const ownedPower = ownedPowers.find(p => p.powerId === prereq.powerId);
+      const requiredPower = POWERS.find(p => p.id === prereq.powerId);
+      const requiredPoints = prereq.powerPoints || 0;
+      
+      if (!ownedPower) {
+        unmet.push(`Missing ${requiredPower?.name || prereq.powerId}`);
+      } else if (ownedPower.points < requiredPoints) {
+        unmet.push(`${requiredPower?.name || prereq.powerId} ${ownedPower.points}/${requiredPoints} points`);
+      }
+    }
+  }
+
+  return { met: unmet.length === 0, unmet };
+}
+
 // Calculate surge points
 export function calculateSurge(
   diePools: Record<AttributeName, DiePool>,
@@ -85,7 +132,7 @@ export function calculateSurge(
   // Stuff adjustment: every 5 points adds/subtracts 1
   const stuffModifier = Math.floor(stuff / 5);
 
-  return Math.max(1, baseSurge + stuffModifier);
+  return Math.max(0, baseSurge + stuffModifier);
 }
 
 // Calculate stuff (good or bad)
@@ -154,7 +201,7 @@ export function computeCharacter(
   
   const stuff = calculateStuff(campaignLimit, totalPointsSpent);
   const surge = calculateSurge(diePools, stuff);
-  
+
   return {
     name,
     campaignLimit,

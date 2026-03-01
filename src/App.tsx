@@ -4,7 +4,7 @@ import { ASPECTS, FUNCTIONS, ATTRIBUTES, RATING_SCALE, RATING_LABELS, SKILL_RATI
 import { SKILLS } from './data/skills';
 import { POWERS } from './data/powers';
 import { getDiePool } from './data/diePoolTable';
-import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses } from './utils/calculations';
+import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses, checkPowerPrerequisites } from './utils/calculations';
 import { generateHomebreweryMarkdown } from './utils/homebreweryExport';
 import { CharacterSheet } from './components/CharacterSheet';
 import './components/CharacterSheet.css';
@@ -287,7 +287,7 @@ function App() {
   };
 
   // Calculate power costs
-  
+
   const powerCosts = useMemo(() => {
     return powers.reduce((sum, cp) => sum + cp.points, 0);
   }, [powers]);
@@ -668,15 +668,35 @@ function App() {
 
           {/* Add power buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {POWERS.map(power => (
-              <button
-                key={power.id}
-                onClick={() => addPower(power.id)}
-                className="bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded px-3 py-1 text-sm transition-colors"
-              >
-                {power.emoji} {power.name}
-              </button>
-            ))}
+            {POWERS.map(power => {
+              const prereqResult = checkPowerPrerequisites(
+                power,
+                computedCharacter.attributes,
+                aspects,
+                functions,
+                powers
+              );
+              const isAlreadyOwned = powers.some(p => p.powerId === power.id && power.id !== 'MinorPower');
+              
+              return (
+                <button
+                  key={power.id}
+                  onClick={() => addPower(power.id)}
+                  disabled={isAlreadyOwned}
+                  title={!prereqResult.met ? `Missing: ${prereqResult.unmet.join(', ')}` : isAlreadyOwned ? 'Already owned' : ''}
+                  className={`border rounded px-3 py-1 text-sm transition-colors ${
+                    isAlreadyOwned
+                      ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                      : !prereqResult.met
+                        ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 cursor-help'
+                        : 'bg-slate-700 hover:bg-slate-600 border-slate-600'
+                  }`}
+                >
+                  {power.emoji} {power.name}
+                  
+                </button>
+              );
+            })}
           </div>
 
           {powers.length === 0 ? (
@@ -686,6 +706,15 @@ function App() {
               {powers.map(powerEntry => {
                 const power = POWERS.find(p => p.id === powerEntry.powerId);
                 if (!power) return null;
+                
+                // Check prerequisites
+                const prereqResult = checkPowerPrerequisites(
+                  power,
+                  computedCharacter.attributes,
+                  aspects,
+                  functions,
+                  powers
+                );
                 
                 const getTier = (pts: number, levels: { cost: number }[], powerId: string) => {
                   // Special handling for Minor Power
@@ -705,10 +734,17 @@ function App() {
                 const tier = getTier(powerEntry.points, power.levels, power.id);
                 
                 return (
-                  <div key={powerEntry.id} className="bg-slate-700/50 rounded p-3">
+                  <div key={powerEntry.id} className={`rounded p-3 ${
+                    prereqResult.met 
+                      ? 'bg-slate-700/50' 
+                      : 'bg-red-900/30 border border-red-500/50'
+                  }`}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="font-medium">{power.emoji} {power.name}</div>
+                        <div className="font-medium">
+                          {power.emoji} {power.name}
+                          {!prereqResult.met && <span className="ml-2 text-red-400">⚠️</span>}
+                        </div>
                         <div className="text-xs text-slate-500">{power.category}</div>
                       </div>
                       <button
@@ -719,6 +755,18 @@ function App() {
                       </button>
                     </div>
                     <p className="text-xs text-slate-400 mb-3">{power.description}</p>
+                    
+                    {/* Prerequisites warning */}
+                    {!prereqResult.met && (
+                      <div className="mb-3 p-2 bg-red-900/30 border border-red-500/30 rounded">
+                        <p className="text-xs text-red-400 font-medium">Prerequisites not met:</p>
+                        <ul className="text-xs text-red-300 list-disc list-inside">
+                          {prereqResult.unmet.map((unmet, idx) => (
+                            <li key={idx}>{unmet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     
                     <div className="flex gap-2 items-end">
                       <div className="flex-1">
@@ -759,7 +807,6 @@ function App() {
                     {/* Quick-set buttons based on power's standard levels */}
                     <div className="flex flex-wrap gap-1 mt-2">
                       {power.id === 'MinorPower' ? (
-                        // Simplified buttons for Minor Power
                         <>
                           {[-3, 3, 5].map(cost => (
                             <button
@@ -776,7 +823,6 @@ function App() {
                           ))}
                         </>
                       ) : (
-                        // Standard buttons for other powers
                         power.levels.map((level, idx) => (
                           <button
                             key={idx}
@@ -793,7 +839,6 @@ function App() {
                       )}
                     </div>
                     
-                    {/* Custom label for this power purchase */}
                     {/* Label for this power purchase */}
                     <div className="mt-2">
                       <label className="block text-xs text-slate-400 mb-1">Label</label>

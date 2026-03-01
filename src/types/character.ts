@@ -182,6 +182,23 @@ export interface Power {
   requirements: string;
   keyAttributes: AttributeName[];
   levels: PowerLevel[];
+  prerequisites?: PowerPrerequisite[];
+}
+
+// Prerequisites to use a power
+export interface PowerPrerequisite {
+  type: 'attribute' | 'aspect' | 'function' | 'power';
+  // For attribute prerequisites
+  attribute?: AttributeName;
+  // For aspect prerequisites
+  aspect?: AspectName;
+  // For function prerequisites
+  func?: FunctionName;
+  // Minimum value required
+  minimum?: number;
+  // For power prerequisites
+  powerId?: string;
+  powerPoints?: number;
 }
 
 // Character state
