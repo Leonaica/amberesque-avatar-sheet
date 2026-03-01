@@ -141,19 +141,20 @@ export function computeCharacter(
   totalPointsSpent += functions.Perceive;
   totalPointsSpent += functions.Force;
   
-  // Skills
-  skills.forEach(skill => {
-    const rating = SKILL_RATINGS.find(r => r.rating === skill.rating);
-    if (rating) totalPointsSpent += rating.cost;
-  });
-  
-  // Artifacts, allies, shadows
-  totalPointsSpent += artifacts.reduce((sum, a) => sum + a.cost, 0);
-  totalPointsSpent += allies.reduce((sum, a) => sum + a.cost, 0);
-  totalPointsSpent += personalShadows.reduce((sum, s) => sum + s.cost, 0);
+    // Skills
+    totalPointsSpent += calculateSkillCosts(skills);
+
+    // Powers
+    totalPointsSpent += powers.reduce((sum, p) => sum + p.points, 0);
+
+    // Artifacts, allies, shadows
+    totalPointsSpent += artifacts.reduce((sum, a) => sum + (a.cost * a.quantity), 0);
+    totalPointsSpent += allies.reduce((sum, a) => sum + a.cost, 0);
+    totalPointsSpent += personalShadows.reduce((sum, s) => sum + s.cost, 0);
   
   const stuff = calculateStuff(campaignLimit, totalPointsSpent);
   const surge = calculateSurge(diePools, stuff);
+  
   return {
     name,
     campaignLimit,

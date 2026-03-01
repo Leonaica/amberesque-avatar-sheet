@@ -287,25 +287,13 @@ function App() {
   };
 
   // Calculate power costs
-
+  
   const powerCosts = useMemo(() => {
     return powers.reduce((sum, cp) => sum + cp.points, 0);
   }, [powers]);
 
-  // Update total points calculation
-  const totalPointsSpent = useMemo(() => {
-    let total = 0;
-    total += aspects.Form + aspects.Flesh + aspects.Mind + aspects.Spirit;
-    total += functions.Resist + functions.Adapt + functions.Perceive + functions.Force;
-    total += calculateSkillCosts(skills);
-    total += powerCosts;
-    total += artifacts.reduce((sum, a) => sum + a.cost * a.quantity, 0);
-    total += allies.reduce((sum, a) => sum + a.cost, 0);
-    total += personalShadows.reduce((sum, s) => sum + s.cost, 0);
-    return total;
-  }, [aspects, functions, skills, powerCosts, artifacts, allies, personalShadows]);
-
-  const stuff = campaignLimit - totalPointsSpent;
+  const totalPointsSpent = computedCharacter.totalPointsSpent;
+  const stuff = computedCharacter.stuff;
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
