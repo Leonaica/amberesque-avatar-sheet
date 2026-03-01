@@ -53,6 +53,8 @@ export function generateHomebreweryMarkdown(
   campaignLimit: number,
   aspects: Record<string, RatingValue>,
   functions: Record<string, RatingValue>,
+  aspectExplanations: Record<string, string>,
+  functionExplanations: Record<string, string>,
   skills: CharacterSkill[],
   powers: CharacterPower[],
   artifacts: Artifact[],
@@ -103,19 +105,34 @@ export function generateHomebreweryMarkdown(
   lines.push(`___`);
   lines.push(``);
   
-  // Surge
-  const stuffText = stuff >= 0 ? `+${stuff} Good Stuff` : `${stuff} Bad Stuff`;
-  lines.push(`***${surge} Surge Points*** (${stuffText})`);
-  lines.push(`___`);
-  
+// Surge
+const stuffText = stuff >= 0 ? `+${stuff} Good Stuff` : `${stuff} Bad Stuff`;
+lines.push(`***${surge} Surge Points*** (${stuffText})`);
+lines.push(`___`);
+
+// Mythic Aspect explanations (+20 or higher)
+ASPECTS.forEach(aspect => {
+  if (aspects[aspect.id] >= 20 && aspectExplanations[aspect.id]?.trim()) {
+    lines.push(`***Mythic ${aspect.name}*** :: *${aspectExplanations[aspect.id].trim()}*`);
+  }
+});
+
+// Mythic Function explanations (+20 or higher)
+FUNCTIONS.forEach(func => {
+  if (functions[func.id] >= 20 && functionExplanations[func.id]?.trim()) {
+    lines.push(`***Mythic ${func.name}*** :: *${functionExplanations[func.id].trim()}*`);
+  }
+});
+
+  // Powers
   if (powers.length > 0) {
     lines.push(`#### Powers`);
     powers.forEach(cp => {
       const power = POWERS.find(p => p.id === cp.powerId);
       if (power) {
         const powerName = cp.label || power.name;
-        const description = cp.description ? ` :: ${cp.description}` : '';
-        lines.push(`**${power.emoji} ${powerName}** *[${cp.points} Points]*${description}`);
+        const description = cp.description ? `${cp.description}` : '';
+        lines.push(`**${power.emoji} ${powerName}** *[${cp.points} Points]* :: ${description}`);
       }
     });
   }
@@ -142,7 +159,7 @@ export function generateHomebreweryMarkdown(
         const rating = SKILL_RATINGS.find(r => r.rating === skillEntry.rating);
         const modText = rating ? ` (${rating.modifier >= 0 ? '+' : ''}${rating.modifier})` : '';
         const specialtyText = skillEntry.specialty ? ` ${skillEntry.specialty}` : '';
-        lines.push(`**${skill.name}**::${skillEntry.rating}${modText}${specialtyText}`);
+        lines.push(`**${skill.name}** :: ${skillEntry.rating}${modText}${specialtyText}`);
       }
     });
   }

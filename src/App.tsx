@@ -4,7 +4,7 @@ import { ASPECTS, FUNCTIONS, ATTRIBUTES, RATING_SCALE, RATING_LABELS, SKILL_RATI
 import { SKILLS } from './data/skills';
 import { POWERS } from './data/powers';
 import { getDiePool } from './data/diePoolTable';
-import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses, checkPowerPrerequisites } from './utils/calculations';
+import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses, checkPowerPrerequisites, getAttributeTierColor } from './utils/calculations';
 import { generateHomebreweryMarkdown } from './utils/homebreweryExport';
 import { CharacterSheet } from './components/CharacterSheet';
 import './components/CharacterSheet.css';
@@ -39,6 +39,10 @@ function App() {
     Perceive: 0 as RatingValue,
     Force: 0 as RatingValue,
   });
+
+  // Explanation state for high-rated Aspects and Functions
+  const [aspectExplanations, setAspectExplanations] = useState<Record<string, string>>({});
+  const [functionExplanations, setFunctionExplanations] = useState<Record<string, string>>({});
   
   const [skills, setSkills] = useState<CharacterSkill[]>([]);
   const [powers, setPowers] = useState<CharacterPower[]>([]);
@@ -58,6 +62,14 @@ function App() {
 
   const handleFunctionChange = (functionId: string, value: RatingValue) => {
     setFunctions(prev => ({ ...prev, [functionId]: value }));
+  };
+
+  const handleAspectExplanationChange = (aspectId: string, explanation: string) => {
+    setAspectExplanations(prev => ({ ...prev, [aspectId]: explanation }));
+  };
+  
+  const handleFunctionExplanationChange = (functionId: string, explanation: string) => {
+    setFunctionExplanations(prev => ({ ...prev, [functionId]: explanation }));
   };
 
   // Skill handlers
@@ -195,6 +207,8 @@ function App() {
       campaignLimit,
       aspects,
       functions,
+      aspectExplanations,
+      functionExplanations,
       skills,
       powers,
       artifacts,
@@ -227,6 +241,8 @@ function App() {
       campaignLimit,
       aspects,
       functions,
+      aspectExplanations,
+      functionExplanations,
       skills,
       powers,
       artifacts,
@@ -260,6 +276,8 @@ function App() {
         setCampaignLimit(data.campaignLimit ?? 100);
         setAspects(data.aspects || { Form: 0, Flesh: 0, Mind: 0, Spirit: 0 });
         setFunctions(data.functions || { Resist: 0, Adapt: 0, Perceive: 0, Force: 0 });
+        setAspectExplanations(data.aspectExplanations || {});
+        setFunctionExplanations(data.functionExplanations || {});
         setSkills(data.skills || []);
         setPowers(data.powers || []);
         setArtifacts(data.artifacts || []);
@@ -369,38 +387,39 @@ function App() {
             </button>
           </div>
         </div>
-      </header>
 
-      {/* Summary Bar */}
-      <div className="bg-slate-800/50 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex flex-wrap gap-6 text-sm">
-            <div>
-              <span className="text-slate-400">Spent: </span>
-              <span className="font-bold text-amber-400">{totalPointsSpent}</span>
-              <span className="text-slate-500"> / {campaignLimit}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Stuff: </span>
-              <span className={`font-bold ${stuff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {stuff >= 0 ? `+${stuff} Good` : `${stuff} Bad`}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-400">Surge: </span>
-              <span className="font-bold text-cyan-400">{computedCharacter.surge}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Skill Cap: </span>
-              <span className="font-bold text-purple-400">+{computedCharacter.skillCap}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Skill Max: </span>
-              <span className="font-bold text-purple-400">{computedCharacter.skillMaximum}</span>
+        {/* Summary Bar */}
+        <div className="bg-slate-800/50 border-b border-slate-700">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div>
+                <span className="text-slate-400">Spent: </span>
+                <span className="font-bold text-amber-400">{totalPointsSpent}</span>
+                <span className="text-slate-500"> / {campaignLimit}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Stuff: </span>
+                <span className={`font-bold ${stuff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {stuff >= 0 ? `+${stuff} Good` : `${stuff} Bad`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400">Surge: </span>
+                <span className="font-bold text-cyan-400">{computedCharacter.surge}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Skill Cap: </span>
+                <span className="font-bold text-purple-400">+{computedCharacter.skillCap}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Skill Max: </span>
+                <span className="font-bold text-purple-400">{computedCharacter.skillMaximum}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-8">
@@ -436,6 +455,21 @@ function App() {
                         </option>
                       ))}
                     </select>
+                    {/* Conditional explanation field for +20 or higher */}
+                    {aspects[aspect.id] >= 20 && (
+                      <div className="mt-2">
+                        <label className="block text-xs text-amber-400 mb-1">
+                          ⚠️ {RATING_LABELS[aspects[aspect.id]]} Explanation Required
+                        </label>
+                        <textarea
+                          value={aspectExplanations[aspect.id] || ''}
+                          onChange={(e) => handleAspectExplanationChange(aspect.id, e.target.value)}
+                          placeholder={`Mythic ${aspect.name} rating! Describe how it manifests.`}
+                          className="w-full bg-slate-700/50 border border-amber-500/50 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[60px]"
+                          rows={2}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -476,6 +510,21 @@ function App() {
                         </option>
                       ))}
                     </select>
+                    {/* Conditional explanation field for +20 or higher */}
+                    {functions[func.id] >= 20 && (
+                      <div className="mt-2">
+                        <label className="block text-xs text-amber-400 mb-1">
+                          ⚠️ {RATING_LABELS[functions[func.id]]} Explanation Required
+                        </label>
+                        <textarea
+                          value={functionExplanations[func.id] || ''}
+                          onChange={(e) => handleFunctionExplanationChange(func.id, e.target.value)}
+                          placeholder={`Mythic ${func.name} rating! Describe how it manifests.`}
+                          className="w-full bg-slate-700/50 border border-amber-500/50 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[60px]"
+                          rows={2}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -532,10 +581,12 @@ function App() {
                           return (
                             <td key={aspect.id} className="p-2 text-center border-b border-slate-700">
                               <div className="font-medium text-slate-200">{attr.name}</div>
-                              <div className={`text-xs font-bold ${value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {/* Show the attribute value
+                              <div className="text-xs text-slate-200">
                                 {value >= 0 ? '+' : ''}{value}
-                              </div>
-                              <div className="text-xs text-cyan-400">{pool.notation}</div>
+                              </div> 
+                              */}
+                              <div className={`text-xs font-bold ${getAttributeTierColor(value)}`}>{pool.notation}</div>
                             </td>
                           );
                         })}
@@ -974,9 +1025,10 @@ function App() {
                       <option value={-6}>Nemesis (-6)</option>
                       <option value={-3}>Enemy (-3)</option>
                       <option value={-1}>Annoyance (-1)</option>
-                      <option value={1}>Contact (1)</option>
-                      <option value={3}>Ally (3)</option>
-                      <option value={6}>Devotee (6)</option>
+                      <option value={1}>Ally (1)</option>
+                      <option value={2}>Friend (2)</option>
+                      <option value={4}>Chaos Devotee (4)</option>
+                      <option value={6}>Amber Devotee (6) / Blood of Amber</option>
                     </select>
                     <button
                       onClick={() => removeAlly(ally.id)}

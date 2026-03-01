@@ -28,6 +28,24 @@ export function attributeToDiePoolSum(attrValue: number): number {
   return 48; // 4d12
 }
 
+// Get tier color for attribute value
+export function getAttributeTierColor(value: number): string {
+  if (value >= 40) return 'text-rose-400';        // Unnatural
+  if (value >= 15) return 'text-emerald-400';     // Supernatural
+  if (value >= 0) return 'text-amber-400';        // Superhuman (Amber-level)
+  if (value >= -10) return 'text-violet-400';     // Transhuman
+  return 'text-blue-400';                         // Human
+}
+
+// Get tier name for attribute value
+export function getAttributeTierName(value: number): string {
+  if (value >= 40) return 'Unnatural';
+  if (value >= 15) return 'Supernatural';
+  if (value >= 0) return 'Superhuman';
+  if (value >= -10) return 'Transhuman';
+  return 'Human';
+}
+
 // Calculate skill cap (based on Willpower)
 export function calculateSkillCap(willpowerPool: number): number {
   const cap = Math.floor(willpowerPool / 4);
