@@ -3,7 +3,7 @@ import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, Perso
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, RATING_SCALE, RATING_LABELS, SKILL_RATINGS } from './types/character';
 import { SKILLS } from './data/skills';
 import { POWERS } from './data/powers';
-import { getDiePool } from './data/diePoolTable';
+import { getDiePoolEntry } from './data/diePoolTable';
 import { computeCharacter, calculateSkillCosts, calculateTotalSkillBonuses, checkPowerPrerequisites, getAttributeTierColor } from './utils/calculations';
 import { generateHomebreweryMarkdown } from './utils/homebreweryExport';
 import { CharacterSheet } from './components/CharacterSheet';
@@ -577,16 +577,12 @@ function App() {
                           const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);
                           if (!attr) return <td key={aspect.id} className="p-2"></td>;
                           const value = funcRating + aspects[aspect.id];
-                          const pool = getDiePool(value);
+                          const entry = getDiePoolEntry(value);
                           return (
                             <td key={aspect.id} className="p-2 text-center border-b border-slate-700">
                               <div className="font-medium text-slate-200">{attr.name}</div>
-                              {/* Show the attribute value
-                              <div className="text-xs text-slate-200">
-                                {value >= 0 ? '+' : ''}{value}
-                              </div> 
-                              */}
-                              <div className={`text-xs font-bold ${getAttributeTierColor(value)}`}>{pool.notation}</div>
+                              <div className="text-xs text-slate-400">Rank {entry.rank}</div>
+                              <div className={`text-xs font-bold ${getAttributeTierColor(value)}`}>{entry.pool.notation}</div>
                             </td>
                           );
                         })}
@@ -952,6 +948,7 @@ function App() {
                       value={artifact.name}
                       onChange={(e) => updateArtifact(artifact.id, { name: e.target.value })}
                       className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Artifact name"
                     />
                     <input
                       type="number"
@@ -966,7 +963,7 @@ function App() {
                       ✕
                     </button>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
                     <span>Qty:</span>
                     <input
                       type="number"
@@ -977,6 +974,13 @@ function App() {
                     />
                     <span>= {artifact.cost * artifact.quantity} pts</span>
                   </div>
+                  <textarea
+                    value={artifact.description}
+                    onChange={(e) => updateArtifact(artifact.id, { description: e.target.value })}
+                    className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="Description..."
+                    rows={2}
+                  />
                 </div>
               ))}
               {artifacts.length === 0 && (
@@ -1013,6 +1017,7 @@ function App() {
                       value={ally.name}
                       onChange={(e) => updateAlly(ally.id, { name: e.target.value })}
                       className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Name"
                     />
                     <select
                       value={ally.loyalty}
@@ -1028,7 +1033,7 @@ function App() {
                       <option value={1}>Ally (1)</option>
                       <option value={2}>Friend (2)</option>
                       <option value={4}>Chaos Devotee (4)</option>
-                      <option value={6}>Amber Devotee (6) / Blood of Amber</option>
+                      <option value={6}>Amber Devotee (6)</option>
                     </select>
                     <button
                       onClick={() => removeAlly(ally.id)}
@@ -1037,6 +1042,13 @@ function App() {
                       ✕
                     </button>
                   </div>
+                  <textarea
+                    value={ally.description}
+                    onChange={(e) => updateAlly(ally.id, { description: e.target.value })}
+                    className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="Description..."
+                    rows={2}
+                  />
                 </div>
               ))}
               {allies.length === 0 && (
@@ -1067,12 +1079,13 @@ function App() {
             <div className="space-y-2">
               {personalShadows.map(shadow => (
                 <div key={shadow.id} className="bg-slate-700/50 rounded p-2">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={shadow.name}
                       onChange={(e) => updateShadow(shadow.id, { name: e.target.value })}
                       className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Shadow name"
                     />
                     <input
                       type="number"
@@ -1087,6 +1100,13 @@ function App() {
                       ✕
                     </button>
                   </div>
+                  <textarea
+                    value={shadow.description}
+                    onChange={(e) => updateShadow(shadow.id, { description: e.target.value })}
+                    className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="Description..."
+                    rows={2}
+                  />
                 </div>
               ))}
               {personalShadows.length === 0 && (

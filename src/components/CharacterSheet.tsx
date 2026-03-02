@@ -2,7 +2,7 @@ import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, Perso
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { SKILLS } from '../data/skills';
 import { POWERS } from '../data/powers';
-import { getDiePool } from '../data/diePoolTable';
+import { getDiePoolEntry } from '../data/diePoolTable';
 
 interface CharacterSheetProps {
   name: string;
@@ -59,8 +59,8 @@ export function CharacterSheet({
   }, 0);
 
   // Calculate cap and max
-  const willpowerPool = getDiePool(functions['Resist'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
-  const memoryPool = getDiePool(functions['Perceive'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
+  const willpowerPool = getDiePoolEntry(functions['Resist'] + aspects['Mind']).pool.dice.reduce((s, d) => s + d, 0);
+  const memoryPool = getDiePoolEntry(functions['Perceive'] + aspects['Mind']).pool.dice.reduce((s, d) => s + d, 0);
   const skillCap = Math.min(Math.floor(willpowerPool / 4), 4);
   const skillMax = Math.floor(memoryPool / 2);
 
@@ -116,7 +116,7 @@ export function CharacterSheet({
                     const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);
                     if (!attr) return <td key={aspect.id}></td>;
                     const value = funcRating + aspects[aspect.id];
-                    const pool = getDiePool(value);
+                    const pool = getDiePoolEntry(value).pool;
                     return (
                       <td key={aspect.id} className="attr-cell">
                         <div className="attr-name">{attr.name}</div>

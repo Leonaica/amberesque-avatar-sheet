@@ -1,6 +1,6 @@
 import type { Character, AttributeName, FunctionName, DiePool, Power, CharacterPower } from '../types/character';
 import { ATTRIBUTES, SKILL_RATINGS } from '../types/character';
-import { getDiePool, DIE_POOL_TABLE } from '../data/diePoolTable';
+import { getDiePoolEntry, DIE_POOL_TABLE } from '../data/diePoolTable';
 import { POWERS } from '../data/powers';
 
 // Calculate attribute value from function + aspect ratings
@@ -181,7 +181,7 @@ export function computeCharacter(
       aspects[attr.aspect]
     );
     attributes[attr.id] = value;
-    diePools[attr.id] = getDiePool(value);
+    diePools[attr.id] = getDiePoolEntry(value).pool;
   });
   
   // Calculate derived values

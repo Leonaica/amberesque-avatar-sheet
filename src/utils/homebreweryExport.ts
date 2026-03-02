@@ -2,7 +2,7 @@ import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, Perso
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { SKILLS } from '../data/skills';
 import { POWERS } from '../data/powers';
-import { getDiePool } from '../data/diePoolTable';
+import { getDiePoolEntry } from '../data/diePoolTable';
 
 // Convert die pool to Homebrewery die icons
 function dieIcons(pool: DiePool): string {
@@ -93,7 +93,7 @@ export function generateHomebreweryMarkdown(
       const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);
       if (attr) {
         const value = funcRating + aspects[aspect.id];
-        const pool = getDiePool(value);
+        const pool = getDiePoolEntry(value).pool;
         const icons = dieIcons(pool);
         cells.push(`${attrAbbr(attr.name)}<br>${icons}`);
       }
@@ -146,8 +146,8 @@ FUNCTIONS.forEach(func => {
     }, 0);
     
     // Calculate cap and max
-    const willpowerPool = getDiePool(functions['Resist'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
-    const memoryPool = getDiePool(functions['Perceive'] + aspects['Mind']).dice.reduce((s, d) => s + d, 0);
+    const willpowerPool = getDiePoolEntry(functions['Resist'] + aspects['Mind']).pool.dice.reduce((s, d) => s + d, 0);
+    const memoryPool = getDiePoolEntry(functions['Perceive'] + aspects['Mind']).pool.dice.reduce((s, d) => s + d, 0);
     const skillCap = Math.min(Math.floor(willpowerPool / 4), 4);
     const skillMax = Math.floor(memoryPool / 2);
     
