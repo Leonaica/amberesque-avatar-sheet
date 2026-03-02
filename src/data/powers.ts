@@ -29,8 +29,8 @@ export const POWERS: Power[] = [
     keyAttributes: ['Resilience', 'Creativity', 'Wisdom', 'Presence'],
     levels: [
       { name: 'Logrus Master', cost: 45 },
-      { name: 'Logrus Lord', cost: 70 },
-      { name: 'Logrus Scion', cost: 100 },
+      { name: 'Wyrm Rider', cost: 70 },
+      { name: 'Chaos Dragon', cost: 100 },
     ],
     prerequisites: [
       { type: 'power', powerId: 'shapeShifting', powerPoints: 35 },
@@ -66,7 +66,7 @@ export const POWERS: Power[] = [
     levels: [
       { name: 'Shape Shifter', cost: 35 },
       { name: 'Flesh Sculptor', cost: 65 },
-      { name: 'Primal Archon', cost: 85 },
+      { name: 'Protean Changer', cost: 85 },
     ],
   },
   {
