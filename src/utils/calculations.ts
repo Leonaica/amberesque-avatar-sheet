@@ -79,7 +79,8 @@ export function checkPowerPrerequisites(
   attributes: Record<AttributeName, number>,
   aspects: { Form: number; Flesh: number; Mind: number; Spirit: number },
   functions: { Resist: number; Adapt: number; Perceive: number; Force: number },
-  ownedPowers: CharacterPower[]
+  ownedPowers: CharacterPower[],
+  currentPowerPoints?: number
 ): { met: boolean; unmet: string[] } {
   if (!power.prerequisites || power.prerequisites.length === 0) {
     return { met: true, unmet: [] };
@@ -88,6 +89,13 @@ export function checkPowerPrerequisites(
   const unmet: string[] = [];
 
   for (const prereq of power.prerequisites) {
+    // Check if this prerequisite applies at current power level
+    if (prereq.appliesAtPoints !== undefined && currentPowerPoints !== undefined) {
+      if (currentPowerPoints < prereq.appliesAtPoints) {
+        continue; // Skip this prerequisite - power not high enough for it to apply
+      }
+    }
+    
     if (prereq.type === 'attribute' && prereq.attribute && prereq.minimum !== undefined) {
       const attrValue = attributes[prereq.attribute];
       if (attrValue < prereq.minimum) {

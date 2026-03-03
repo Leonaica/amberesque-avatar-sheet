@@ -35,6 +35,8 @@ export const POWERS: Power[] = [
     prerequisites: [
       { type: 'power', powerId: 'shapeShifting', powerPoints: 35 },
       { type: 'aspect', aspect: 'Spirit', minimum: 0 },
+      // Conditional requirement - A Chaos Dragon requires Advanced Shape Shift or better
+      { type: 'power', powerId: 'shapeShifting', powerPoints: 65, appliesAtPoints: 100 },
     ],
   },
   {
@@ -115,6 +117,8 @@ export const POWERS: Power[] = [
       { name: 'Master', cost: 10 },
       { name: 'Apex', cost: 15 },
     ],
+    repeatable: true,
+    subPowers: ['Biokinesis', 'Telekinesis', 'Telepathy', 'Divination', 'Pyrokinesis'],
   },
   {
     id: 'pactMagic',
@@ -171,6 +175,8 @@ export const POWERS: Power[] = [
       { name: 'Artificer Prime', cost: 10 },
       { name: 'Artificer Omniscient', cost: 15 },
     ],
+    repeatable: true,
+    subPowers: ['Psychomancy', 'Plasmancy', 'Chronomancy', 'Ethermancy', 'Alchemancy', 'Technomancy'],
   },
   {
     id: 'MinorPower',
@@ -193,5 +199,6 @@ export const POWERS: Power[] = [
       { name: 'Minor (4)', cost: 4 },
       { name: 'Minor (5)', cost: 5 },
     ],
+    repeatable: true,
   },
 ];

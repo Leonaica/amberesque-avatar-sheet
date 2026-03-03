@@ -183,6 +183,8 @@ export interface Power {
   keyAttributes: AttributeName[];
   levels: PowerLevel[];
   prerequisites?: PowerPrerequisite[];
+  repeatable?: boolean; // Can the power be taken multiple times?
+  subPowers?: string[]; // Psionic Disciplines, Artifice Sciences, etc.
 }
 
 // Prerequisites to use a power
@@ -199,6 +201,8 @@ export interface PowerPrerequisite {
   // For power prerequisites
   powerId?: string;
   powerPoints?: number;
+  // Minimum rank for which a prerequsite applies
+  appliesAtPoints?: number;
 }
 
 // Character state

@@ -92,7 +92,8 @@ function App() {
     const power = POWERS.find(p => p.id === powerId);
     if (!power) return;
   
-    if (powers.some(p => p.powerId === powerId)) return;
+    // Only block duplicates for non-repeatable powers
+    if (!power.repeatable && powers.some(p => p.powerId === powerId)) return;
   
     const defaultPoints = power.levels.length > 0 ? power.levels[0].cost : 0;
     const defaultLabel = power.levels.length > 0 ? power.levels[0].name : power.name;
@@ -723,7 +724,7 @@ function App() {
                 functions,
                 powers
               );
-              const isAlreadyOwned = powers.some(p => p.powerId === power.id && power.id !== 'MinorPower');
+              const isAlreadyOwned = !power.repeatable && powers.some(p => p.powerId === power.id);
               
               return (
                 <button
@@ -760,7 +761,8 @@ function App() {
                   computedCharacter.attributes,
                   aspects,
                   functions,
-                  powers
+                  powers,
+                  powerEntry.points
                 );
                 
                 const getTier = (pts: number, levels: { cost: number }[], powerId: string) => {
@@ -888,22 +890,53 @@ function App() {
                     
                     {/* Label for this power purchase */}
                     <div className="mt-2">
-                      <label className="block text-xs text-slate-400 mb-1">Label</label>
-                      <input
-                        type="text"
-                        value={powerEntry.label || ''}
-                        onChange={(e) => updatePowerLabel(powerEntry.id, e.target.value)}
-                        placeholder={(() => {
-                          if (power.id === 'MinorPower') {
-                            if (powerEntry.points < 0) return 'Limitation';
-                            if (powerEntry.points === 0) return 'Trivial';
-                            return 'Minor';
-                          }
-                          const affordableLevel = [...power.levels].reverse().find(l => powerEntry.points >= l.cost);
-                          return affordableLevel?.name || power.levels[0]?.name || power.name;
-                        })()}
-                        className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
+                      <label className="block text-xs text-slate-400 mb-1">
+                        {power.subPowers ? (power.id === 'psionics' ? 'Discipline' : power.id === 'artifice' ? 'Science' : 'Type') : 'Label'}
+                      </label>
+                      {power.subPowers ? (
+                        (() => {
+                          // Get already-selected sub-powers for this power type (excluding current entry)
+                          const usedSubPowers = powers
+                            .filter(p => p.powerId === power.id && p.id !== powerEntry.id)
+                            .map(p => p.label)
+                            .filter(Boolean);
+                          
+                          return (
+                            <select
+                              value={powerEntry.label || ''}
+                              onChange={(e) => updatePowerLabel(powerEntry.id, e.target.value)}
+                              className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            >
+                              <option value="">Select {power.id === 'psionics' ? 'Discipline' : power.id === 'artifice' ? 'Science' : 'Type'}...</option>
+                              {power.subPowers.map(sub => (
+                                <option 
+                                  key={sub} 
+                                  value={sub}
+                                  disabled={usedSubPowers.includes(sub)}
+                                >
+                                  {sub}{usedSubPowers.includes(sub) ? ' (already taken)' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          );
+                        })()
+                      ) : (
+                        <input
+                          type="text"
+                          value={powerEntry.label || ''}
+                          onChange={(e) => updatePowerLabel(powerEntry.id, e.target.value)}
+                          placeholder={(() => {
+                            if (power.id === 'MinorPower') {
+                              if (powerEntry.points < 0) return 'Limitation';
+                              if (powerEntry.points === 0) return 'Trivial';
+                              return 'Minor Power';
+                            }
+                            const affordableLevel = [...power.levels].reverse().find(l => powerEntry.points >= l.cost);
+                            return affordableLevel?.name || power.levels[0]?.name || power.name;
+                          })()}
+                          className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        />
+                      )}
                     </div>
                     
                     {/* Description of how this power manifests */}
@@ -930,7 +963,7 @@ function App() {
           <div className="bg-slate-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                <span>🗡️</span> Artifacts
+                <span>💍</span> Artifacts
               </h2>
               <button
                 onClick={addArtifact}
@@ -999,7 +1032,7 @@ function App() {
           <div className="bg-slate-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                <span>🤝</span> Allies & Nemeses
+                <span>🤝</span> Allies & Enemies
               </h2>
               <button
                 onClick={addAlly}
@@ -1027,13 +1060,18 @@ function App() {
                       })}
                       className="w-24 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
-                      <option value={-6}>Nemesis (-6)</option>
-                      <option value={-3}>Enemy (-3)</option>
-                      <option value={-1}>Annoyance (-1)</option>
-                      <option value={1}>Ally (1)</option>
-                      <option value={2}>Friend (2)</option>
-                      <option value={4}>Chaos Devotee (4)</option>
-                      <option value={6}>Amber Devotee (6)</option>
+                      <option value={-6}>-6: Nemesis</option>
+                      <option value={-5}>-5</option>
+                      <option value={-4}>-4</option>
+                      <option value={-3}>-3: Enemy</option>
+                      <option value={-2}>-2</option>
+                      <option value={-1}>-1: Annoyance</option>
+                      <option value={1}>+1: Ally</option>
+                      <option value={2}>+2: Friend</option>
+                      <option value={3}>+3</option>
+                      <option value={4}>+4: Chaos Devotee</option>
+                      <option value={5}>+5</option>
+                      <option value={6}>+6: Amber Devotee</option>
                     </select>
                     <button
                       onClick={() => removeAlly(ally.id)}
@@ -1052,7 +1090,7 @@ function App() {
                 </div>
               ))}
               {allies.length === 0 && (
-                <p className="text-slate-500 text-sm">No allies or nemeses.</p>
+                <p className="text-slate-500 text-sm">No allies or enemies.</p>
               )}
             </div>
             <div className="mt-3 pt-3 border-t border-slate-700 text-sm">
