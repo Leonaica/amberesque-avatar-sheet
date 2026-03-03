@@ -76,11 +76,10 @@ export function generateHomebreweryMarkdown(
   lines.push(`|:------------------|:------:|:------:|:------:|:------:|:------:|`);
   
   // Calculate total points for aspects + functions
-  const aspectTotal = aspects.Form + aspects.Flesh + aspects.Mind + aspects.Spirit;
-  const functionTotal = functions.Resist + functions.Adapt + functions.Perceive + functions.Force;
-  
-  // Aspect ratings row - first cell empty, second cell is total, then aspect values
+  // const aspectTotal = aspects.Form + aspects.Flesh + aspects.Mind + aspects.Spirit;
+  // const functionTotal = functions.Resist + functions.Adapt + functions.Perceive + functions.Force;
   // const attributeTotal = aspectTotal + functionTotal;
+  // Aspect ratings row - first cell empty, second cell is total, then aspect values
   // lines.push(`| |[${attributeTotal}]|${aspects.Form}|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`);
   
   // Simplified Aspect ratings row - two empty cells, then aspect values
