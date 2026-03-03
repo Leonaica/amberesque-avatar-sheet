@@ -652,6 +652,7 @@ function App() {
                         ✕
                       </button>
                     </div>
+                    <p className="text-xs text-slate-400 mb-3">{skill.description}</p>
                     <div className="flex gap-2 mb-2">
                       <select
                         value={skillEntry.rating}

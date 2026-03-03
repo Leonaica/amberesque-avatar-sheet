@@ -78,11 +78,14 @@ export function generateHomebreweryMarkdown(
   // Calculate total points for aspects + functions
   const aspectTotal = aspects.Form + aspects.Flesh + aspects.Mind + aspects.Spirit;
   const functionTotal = functions.Resist + functions.Adapt + functions.Perceive + functions.Force;
-  const attributeTotal = aspectTotal + functionTotal;
   
   // Aspect ratings row - first cell empty, second cell is total, then aspect values
-  lines.push(`| |[${attributeTotal}]|${aspects.Form}|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`);
+  // const attributeTotal = aspectTotal + functionTotal;
+  // lines.push(`| |[${attributeTotal}]|${aspects.Form}|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`);
   
+  // Simplified Aspect ratings row - two empty cells, then aspect values
+  lines.push(`| | |${aspects.Form}|${aspects.Flesh}|${aspects.Mind}|${aspects.Spirit}|`);
+
   // Function rows with attributes
   FUNCTIONS.forEach(func => {
     const funcRating = functions[func.id];
