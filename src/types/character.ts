@@ -131,6 +131,8 @@ export const ATTRIBUTES: Attribute[] = [
   { id: 'Presence', name: 'Presence', func: 'Force', aspect: 'Spirit', description: 'Spiritual gravitas, emotional impact on others' },
 ];
 
+export type ArmorAttributeName = 'Toughness' | 'Endurance' | 'Willpower' | 'Resilience';
+
 export interface DiePool {
   dice: number[];
   notation: string; // e.g., "2d12 + d6" or "d4÷2"

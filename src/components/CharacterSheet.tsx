@@ -1,4 +1,4 @@
-import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow } from '../types/character';
+import type { CharacterAspectRatings, CharacterFunctionRatings, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow } from '../types/character';
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { SKILLS } from '../data/skills';
 import { POWERS } from '../data/powers';
@@ -7,8 +7,8 @@ import { getDiePoolEntry } from '../data/diePoolTable';
 interface CharacterSheetProps {
   name: string;
   campaignLimit: number;
-  aspects: Record<string, RatingValue>;
-  functions: Record<string, RatingValue>;
+  aspects: CharacterAspectRatings;
+  functions: CharacterFunctionRatings;
   skills: CharacterSkill[];
   powers: CharacterPower[];
   artifacts: Artifact[];

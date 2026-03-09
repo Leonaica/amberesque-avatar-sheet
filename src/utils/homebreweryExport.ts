@@ -1,4 +1,4 @@
-import type { RatingValue, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow, DiePool } from '../types/character';
+import type { CharacterAspectRatings, CharacterFunctionRatings, CharacterSkill, CharacterPower, Artifact, Ally, PersonalShadow, DiePool } from '../types/character';
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, SKILL_RATINGS } from '../types/character';
 import { SKILLS } from '../data/skills';
 import { POWERS } from '../data/powers';
@@ -47,12 +47,13 @@ function attrAbbr(name: string): string {
   return abbrs[name] || name.substring(0, 3);
 }
 
+
 export function generateHomebreweryMarkdown(
   name: string,
   avatarIcon: string,
   campaignLimit: number,
-  aspects: Record<string, RatingValue>,
-  functions: Record<string, RatingValue>,
+  aspects: CharacterAspectRatings,
+  functions: CharacterFunctionRatings,
   aspectExplanations: Record<string, string>,
   functionExplanations: Record<string, string>,
   skills: CharacterSkill[],
@@ -63,6 +64,7 @@ export function generateHomebreweryMarkdown(
   stuff: number,
   surge: number
 ): string {
+
   const lines: string[] = [];
   
   // Character sheet frame
