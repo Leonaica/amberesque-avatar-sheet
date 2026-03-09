@@ -3,6 +3,9 @@ import { useCharacter } from '../context/CharacterContext';
 import { useGameState, WOUND_LABELS, WOUND_PENALTIES, type WoundLevel } from '../context/GameStateContext';
 import { ASPECTS, FUNCTIONS, ATTRIBUTES, type AspectName, type AttributeName, type ArmorAttributeName } from '../types/character';
 import { ICONS, DEFAULT_ICON, type IconEntry } from '../data/icons';
+import { DIE_POOL_TABLE } from '../data/diePoolTable';
+import type { DiePoolEntry } from '../data/diePoolTable';
+import { resolveTest } from '../utils/resolution';
 
 const DEFENSE_ATTRIBUTES: Record<AspectName, AttributeName> = {
   Form: 'Toughness',
@@ -22,9 +25,10 @@ export function PlaysheetPage() {
   const character = useCharacter();
   const gameState = useGameState();
   const [activeHealAspect, setActiveHealAspect] = useState<AspectName | null>(null);
-  const [healDicePool, setHealDicePool] = useState('');
+  const [healPoolRank, setHealPoolRank] = useState(5); // Default: d12
   const [healSkillBonus, setHealSkillBonus] = useState(0);
   const [healModifier, setHealModifier] = useState(0);
+  const [healResult, setHealResult] = useState<{ aspect: AspectName; successes: number; roll: number } | null>(null);
 
   const renderIcon = (icon: IconEntry) => {
     return icon.library === 'fontawesome' ? (
@@ -56,38 +60,58 @@ export function PlaysheetPage() {
     }
   };
 
-  // Simulate a healing roll (for natural healing)
+  // Natural healing roll using the resolution system
   const rollNaturalHealing = (aspect: AspectName) => {
     const healingAttr = HEALING_ATTRIBUTES[aspect];
     const diePoolEntry = character.attributeDiePools[healingAttr];
-    const skillBonus = 0; // Natural healing doesn't use skill
     
-    // Roll the dice
-    let total = 0;
-    const rolls: number[] = [];
+    const result = resolveTest({
+      attributePool: diePoolEntry.pool,
+      poolRank: diePoolEntry.rank,
+      skillBonus: 0, // Natural healing doesn't use skill
+      woundPenalty: gameState.woundPenalty,
+      situationalModifier: gameState.totalModifier,
+      isContest: false,
+      targetNumber: 4,
+      approach: 'roll',
+    });
     
-    for (const dieSize of diePoolEntry.pool.dice) {
-      const roll = Math.floor(Math.random() * dieSize) + 1;
-      rolls.push(roll);
-      total += roll;
-      
-      // Check for explosion
-      if (roll === dieSize) {
-        const explosionRoll = Math.floor(Math.random() * dieSize) + 1;
-        rolls.push(explosionRoll);
-        total += explosionRoll;
-      }
+    if (result.successes > 0) {
+      gameState.addRestorationPoints(aspect, result.successes);
     }
     
-    // Apply skill and modifiers
-    const modifiedTotal = total + skillBonus + gameState.woundPenalty + gameState.totalModifier;
+    setHealResult({
+      aspect,
+      successes: result.successes,
+      roll: result.result,
+    });
+  };
+
+  // Aided healing roll using the resolution system
+  const rollAidedHealing = (aspect: AspectName) => {
+    const poolEntry = DIE_POOL_TABLE.find((e: DiePoolEntry) => e.rank === healPoolRank) || DIE_POOL_TABLE[5];
     
-    // Calculate successes (every 4 points over TN 4)
-    const successes = Math.max(0, Math.floor((modifiedTotal - 4) / 4) + 1);
+    const result = resolveTest({
+      attributePool: poolEntry.pool,
+      poolRank: healPoolRank,
+      skillBonus: healSkillBonus,
+      woundPenalty: gameState.woundPenalty,
+      situationalModifier: healModifier,
+      isContest: false,
+      targetNumber: 4,
+      approach: 'roll',
+    });
     
-    gameState.addRestorationPoints(aspect, successes);
+    if (result.successes > 0) {
+      gameState.addRestorationPoints(aspect, result.successes);
+    }
     
-    return { rolls, total, modifiedTotal, successes };
+    setHealResult({
+      aspect,
+      successes: result.successes,
+      roll: result.result,
+    });
+    setActiveHealAspect(null);
   };
 
   if (!character.hasCharacter) {
@@ -132,6 +156,29 @@ export function PlaysheetPage() {
         </div>
       </div>
 
+      {/* Healing Result Toast */}
+      {healResult && (
+        <div className="bg-slate-800 rounded-lg p-4 border border-green-500/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-slate-400">Healing {healResult.aspect}: </span>
+              <span className="text-white font-bold">Rolled {healResult.roll}</span>
+              {healResult.successes > 0 ? (
+                <span className="text-green-400 ml-2">+{healResult.successes} restoration point{healResult.successes > 1 ? 's' : ''}</span>
+              ) : (
+                <span className="text-red-400 ml-2">No restoration points</span>
+              )}
+            </div>
+            <button
+              onClick={() => setHealResult(null)}
+              className="text-slate-500 hover:text-slate-300"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column: Attributes & Die Pools */}
@@ -170,7 +217,6 @@ export function PlaysheetPage() {
                         {ASPECTS.map(aspect => {
                           const attr = ATTRIBUTES.find(a => a.func === func.id && a.aspect === aspect.id);
                           if (!attr) return <td key={aspect.id} className="p-2"></td>;
-                          const value = funcRating + character.aspects[aspect.id];
                           const entry = character.attributeDiePools[attr.id];
                           return (
                             <td key={aspect.id} className="p-2 text-center border-b border-slate-700">
@@ -299,6 +345,8 @@ export function PlaysheetPage() {
                 const armor = gameState.armor[defenseAttr as ArmorAttributeName];
                 const restoration = gameState.restorationPoints[aspect.id];
                 const canHeal = wouldHeal(aspect.id);
+                const healingAttr = HEALING_ATTRIBUTES[aspect.id];
+                const healingPool = character.attributeDiePools[healingAttr];
 
                 return (
                   <div key={aspect.id} className="bg-slate-700/50 rounded p-3">
@@ -346,13 +394,10 @@ export function PlaysheetPage() {
                       <div className="mt-2 pt-2 border-t border-slate-600">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => {
-                              const result = rollNaturalHealing(aspect.id);
-                              // Could show result in a toast/notification
-                            }}
+                            onClick={() => rollNaturalHealing(aspect.id)}
                             className="flex-1 bg-slate-600 hover:bg-slate-500 text-slate-200 px-2 py-1 rounded text-xs"
                           >
-                            🎲 Natural Heal
+                            🎲 Natural ({healingPool.pool.notation})
                           </button>
                           <button
                             onClick={() => setActiveHealAspect(activeHealAspect === aspect.id ? null : aspect.id)}
@@ -364,40 +409,53 @@ export function PlaysheetPage() {
                         
                         {activeHealAspect === aspect.id && (
                           <div className="mt-2 space-y-2">
-                            <input
-                              type="text"
-                              placeholder="Healer's die pool (e.g., 2d12+6)"
-                              value={healDicePool}
-                              onChange={(e) => setHealDicePool(e.target.value)}
+                            <select
+                              value={healPoolRank}
+                              onChange={(e) => setHealPoolRank(parseInt(e.target.value))}
                               className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-xs"
-                            />
+                            >
+                              {DIE_POOL_TABLE.map((entry: DiePoolEntry) => (
+                                <option key={entry.rank} value={entry.rank}>
+                                  {entry.pool.notation} (Rank {entry.rank})
+                                </option>
+                              ))}
+                            </select>
                             <div className="flex gap-2">
-                              <input
-                                type="number"
-                                placeholder="Skill"
-                                value={healSkillBonus}
-                                onChange={(e) => setHealSkillBonus(parseInt(e.target.value) || 0)}
-                                className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-xs"
-                              />
-                              <input
-                                type="number"
-                                placeholder="Mod"
-                                value={healModifier}
-                                onChange={(e) => setHealModifier(parseInt(e.target.value) || 0)}
-                                className="flex-1 bg-slate-600 border border-slate-500 rounded px-2 py-1 text-xs"
-                              />
+                              <div className="flex-1">
+                                <label className="block text-xs text-slate-400 mb-1">Skill</label>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => setHealSkillBonus(Math.max(-1, healSkillBonus - 1))}
+                                    className="bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded text-xs"
+                                  >
+                                    -
+                                  </button>
+                                  <span className={`flex-1 text-center ${healSkillBonus >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {healSkillBonus >= 0 ? '+' : ''}{healSkillBonus}
+                                  </span>
+                                  <button
+                                    onClick={() => setHealSkillBonus(Math.min(4, healSkillBonus + 1))}
+                                    className="bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded text-xs"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <label className="block text-xs text-slate-400 mb-1">Mod</label>
+                                <input
+                                  type="number"
+                                  value={healModifier}
+                                  onChange={(e) => setHealModifier(parseInt(e.target.value) || 0)}
+                                  className="w-full bg-slate-600 border border-slate-500 rounded px-2 py-1 text-xs text-center"
+                                />
+                              </div>
                             </div>
                             <button
-                              onClick={() => {
-                                // Parse dice pool and roll
-                                // For now, just add restoration points manually
-                                const points = parseInt(healDicePool) || 0;
-                                gameState.addRestorationPoints(aspect.id, points);
-                                setActiveHealAspect(null);
-                              }}
+                              onClick={() => rollAidedHealing(aspect.id)}
                               className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs"
                             >
-                              Add Restoration Points
+                              🎲 Roll Healing
                             </button>
                           </div>
                         )}
