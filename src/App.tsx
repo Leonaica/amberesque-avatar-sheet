@@ -9,7 +9,7 @@ import { ResolverPage } from './pages/ResolverPage';
 function App() {
   return (
     <CharacterProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Layout><AvatarBuilderPage /></Layout>} />
           <Route path="/playsheet" element={

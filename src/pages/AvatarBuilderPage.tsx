@@ -264,16 +264,9 @@ export function AvatarBuilderPage() {
       <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1"></div>
-            <h1 className="text-xl font-bold text-amber-400">Amberesque Avatar Sheet</h1>
+            <h1 className="text-xl font-bold text-amber-400">Avatar Builder</h1>
             <div className="flex-1 flex justify-end">
-              <a
-                href="https://storage.googleapis.com/amberesque/Amberesque.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded transition-colors"
-              >
-                📖 Rules
-              </a>
+            
             </div>
           </div>
           <div className="flex flex-wrap gap-4 items-end">
