@@ -88,7 +88,7 @@ export function ResolverPage() {
           woundPenalty: opponentWoundPenalty,
           situationalModifier: opponentModifier,
           targetNumber: 0,
-          approach: 'baseline',
+          approach: 'roll',
         }
       );
       setResult(res);
